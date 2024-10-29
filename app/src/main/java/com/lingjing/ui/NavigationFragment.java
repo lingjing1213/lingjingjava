@@ -2,8 +2,13 @@ package com.lingjing.ui;
 
 
 
+import android.graphics.Color;
 import android.os.Bundle;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -41,6 +46,14 @@ public class NavigationFragment extends Fragment {
         BottomNavigationView bottomNavigationView = view.findViewById(R.id.bottom_navigation);
         bottomNavigationView.setSelectedItemId(R.id.nav_home);
         bottomNavigationView.setItemIconTintList(null);
+        // 设置每个菜单项的标题颜色
+        for (int i = 0; i < bottomNavigationView.getMenu().size(); i++) {
+            MenuItem menuItem = bottomNavigationView.getMenu().getItem(i);
+            SpannableString title = new SpannableString(menuItem.getTitle());
+            title.setSpan(new ForegroundColorSpan(Color.parseColor("#8A5C8A")), 0, title.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+            menuItem.setTitle(title);
+        }
+
         bottomNavigationView.setOnItemSelectedListener(item -> {
             if (listener != null) {
                 listener.onNavigationItemSelected(item.getItemId());

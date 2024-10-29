@@ -37,7 +37,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationFragmen
         getSupportFragmentManager().beginTransaction().replace(R.id.navigation_container, navigationFragment).commit();
 
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new HomeFragment()).commit();
-        ToastUtils.showToast(this, "欢迎回来");
+
     }
 
     @Override
@@ -49,11 +49,12 @@ public class HomeActivity extends AppCompatActivity implements NavigationFragmen
         } else if (itemId == R.id.nav_user) {
             selectedFragment = new UserFragment();
         }
-
-        // 确保选中的 Fragment 不为 null，然后替换显示的 Fragment
-        if (selectedFragment != null) {
+        Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        // 如果选中的 Fragment 不为空，并且不同于当前显示的 Fragment，则替换
+        if (selectedFragment != null  && !(selectedFragment.getClass().isInstance(currentFragment))) {
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, selectedFragment) // 替换主内容区域
+                    .addToBackStack(null)
                     .commit();
         }
 

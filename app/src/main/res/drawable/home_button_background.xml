@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 按钮按下时的背景色和圆角 -->
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <corners android:radius="12dp" /> <!-- 圆角半径 -->
+            <solid android:color="@color/colorButtonPressed" /> <!-- 按下时颜色 -->
+        </shape>
+    </item>
+
+    <!-- 按钮默认背景色和圆角 -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="12dp" /> <!-- 圆角半径 -->
+            <solid android:color="@color/colorButtonDefault" /> <!-- 默认颜色 -->
+        </shape>
+    </item>
+
+</selector>

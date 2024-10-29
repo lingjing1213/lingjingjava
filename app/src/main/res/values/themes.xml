@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Lingjingjava" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Lingjingjava" parent="Theme.AppCompat.Light.NoActionBar" />
 
-    <style name="AppTheme" parent="Theme.AppCompat.Light" />
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar" />
 
 
-    <style name="Theme.App.Transparent" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.App.Transparent" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:backgroundDimEnabled">false</item>
