@@ -43,8 +43,12 @@
         <activity
             android:name=".ui.home.HomeActivity"
             android:exported="true"
-            android:theme="@style/Theme.AppCompat.Light"></activity>
+            android:theme="@style/Theme.AppCompat.Light" />
 
+        <activity android:name=".ui.dglab.DgLabV2Activity"
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.Light">
+        </activity>
         <!--  <activity
               android:name=".MainActivity"
               android:exported="true"

@@ -1,4 +1,4 @@
-package com.lingjing.ui.user.fragment;
+package com.lingjing.ui.user;
 
 import android.os.Bundle;
 

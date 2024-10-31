@@ -7,10 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import com.lingjing.R;
 import com.lingjing.ui.NavigationFragment;
-import com.lingjing.ui.home.fragment.HomeFragment;
-import com.lingjing.ui.user.fragment.UserFragment;
-import com.lingjing.utils.ToastUtils;
-
+import com.lingjing.ui.user.UserFragment;
 
 /**
  * @Author：灵静
@@ -36,7 +33,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationFragmen
         navigationFragment.setOnNavigationItemSelectedListener(this);
         getSupportFragmentManager().beginTransaction().replace(R.id.navigation_container, navigationFragment).commit();
 
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new HomeFragment()).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_home_container, new HomeFragment()).commit();
 
     }
 
@@ -49,11 +46,11 @@ public class HomeActivity extends AppCompatActivity implements NavigationFragmen
         } else if (itemId == R.id.nav_user) {
             selectedFragment = new UserFragment();
         }
-        Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_home_container);
         // 如果选中的 Fragment 不为空，并且不同于当前显示的 Fragment，则替换
         if (selectedFragment != null  && !(selectedFragment.getClass().isInstance(currentFragment))) {
             getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, selectedFragment) // 替换主内容区域
+                    .replace(R.id.fragment_home_container, selectedFragment) // 替换主内容区域
                     .addToBackStack(null)
                     .commit();
         }

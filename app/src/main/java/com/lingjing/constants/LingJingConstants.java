@@ -17,13 +17,13 @@ public class LingJingConstants {
 
     public static final Integer CODE_LENGTH = 6;
 
-    public static final String LOGIN_URL = "login url";
+    public static final String LOGIN_URL = "https://noticeably-positive-bird.ngrok-free.app/app/login";
 
-    public static final String CHECK_USER_URL = "check url";
+    public static final String CHECK_USER_URL = "https://noticeably-positive-bird.ngrok-free.app/app/checkUser";
 
     public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
-    public static final String KEYSTORE_ALIAS = "自定义名称";
+    public static final String KEYSTORE_ALIAS = "lingJing_rsa_key";
 
     public static final String ANDROID_KEYSTORE = "AndroidKeyStore";
 
