@@ -2,6 +2,7 @@ package com.lingjing.ui.dglab;
 
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -19,6 +20,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.lingjing.R;
 import com.lingjing.constants.DGLabConstants;
 import com.lingjing.factory.DgLabViewModelFactory;
+import com.lingjing.utils.BluetoothGattManager;
 import com.lingjing.utils.BluetoothUtils;
 import com.lingjing.utils.ToastUtils;
 
@@ -35,7 +37,6 @@ public class DgLabFragment extends Fragment {
 
     private DgLabViewModel dgLabViewModel;
 
-    private boolean bluetoothResult;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -66,6 +67,12 @@ public class DgLabFragment extends Fragment {
 
 
         dgLabV2Btn.setOnClickListener(v -> {
+            BluetoothGatt bluetoothGatt = BluetoothGattManager.getInstance().getBluetoothGatt();
+            if (bluetoothGatt!=null){
+                if (bluetoothGatt.getDevice().getName().equals(DGLabConstants.DG_LAB_V2_NAME)){
+                    navigateToNextScreen();
+                }
+            }
             dgLabViewModel.checkBluetoothAndRequestPermissions(getActivity());
 
             dgLabViewModel.startBluetoothScan(DGLabConstants.DG_LAB_V2_NAME, new BluetoothUtils.ScanCallback() {
@@ -87,7 +94,7 @@ public class DgLabFragment extends Fragment {
                             @Override
                             public void onDeviceFound(BluetoothDevice device) {
                                 // 处理找到的设备
-                                ToastUtils.showToast(getContext(), "找到设备: " + device.getName());
+                                //ToastUtils.showToast(getContext(), "找到设备: " + device.getName());
                                 // 进行连接
                                 dgLabViewModel.connectToDevice(device);
                             }
