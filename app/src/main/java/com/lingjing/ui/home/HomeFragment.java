@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import com.lingjing.R;
+import com.lingjing.ui.dglab.DgLabActivity;
 import com.lingjing.ui.dglab.DgLabV2Activity;
 import com.lingjing.utils.ToastUtils;
 
@@ -48,7 +49,7 @@ public class HomeFragment extends Fragment {
 
         dgLabBtn.setOnClickListener(v -> {
             // Button 2 点击事件
-            Intent intent = new Intent(getActivity(), DgLabV2Activity.class);
+            Intent intent = new Intent(getActivity(), DgLabActivity.class);
             startActivity(intent);
             getActivity().finish();
         });
