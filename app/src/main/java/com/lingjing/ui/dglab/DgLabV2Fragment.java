@@ -16,6 +16,8 @@ import com.lingjing.R;
 import com.lingjing.ui.dglab.fragment.DgLabButtonsFragment;
 import com.lingjing.utils.ToastUtils;
 
+import java.util.Objects;
+
 /**
  * @Author：灵静
  * @Package：com.lingjing.ui.dglab
@@ -25,7 +27,7 @@ import com.lingjing.utils.ToastUtils;
  * @Filename：DgLabV2Fragmet
  * @Version：1.0.0
  */
-public class DgLabV2Fragment extends Fragment {
+public class DgLabV2Fragment extends Fragment implements  DgLabButtonsFragment.ButtonsFragmentCallBack{
     public static final String TAG = "DgLabV2Fragment";
 
     private DgLabV2ViewModel dgLabV2ViewModel;
@@ -44,7 +46,7 @@ public class DgLabV2Fragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         dgLabV2ViewModel = new ViewModelProvider(this).get(DgLabV2ViewModel.class);
         if (savedInstanceState == null) {
-            DgLabButtonsFragment buttonsFragment = new DgLabButtonsFragment();
+            DgLabButtonsFragment buttonsFragment = DgLabButtonsFragment.newInstance();
             getChildFragmentManager().beginTransaction()
                     .replace(R.id.buttonsFragmentContainer, buttonsFragment) // 这里的 id 是您在 fragment_dglabv2.xml 中为容器设置的
                     .commit();
@@ -165,6 +167,19 @@ public class DgLabV2Fragment extends Fragment {
     // 接口用于监听用户输入
     interface InputValueListener {
         void onInputValue(int value);
+    }
+    @Override
+    public void addFragment(Fragment fragment) {
+//        getChildFragmentManager()方法可以获取自己的FragmentManager，而不是activity的FragmentManager，因为要管理的是子fragment
+        getChildFragmentManager()
+                .beginTransaction()
+                .replace(R.id.buttonsFragmentContainer, fragment)
+                .addToBackStack(null)
+                .commit();
+    }
+    @Override
+    public void popFragment() {
+        getChildFragmentManager().popBackStack();
     }
 }
 

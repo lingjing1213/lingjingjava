@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment;
 
 import com.lingjing.R;
 import com.lingjing.ui.NavigationFragment;
+import com.lingjing.ui.dglab.fragment.DgLabButtonsFragment;
 import com.lingjing.ui.home.HomeActivity;
 import com.lingjing.ui.home.HomeFragment;
 import com.lingjing.ui.user.UserFragment;
@@ -57,4 +58,6 @@ public class DgLabV2Activity extends AppCompatActivity implements NavigationFrag
                     .commit();
         }
     }
+
+
 }
