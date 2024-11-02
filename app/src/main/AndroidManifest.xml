@@ -45,6 +45,11 @@
             android:exported="true"
             android:theme="@style/Theme.AppCompat.Light" />
 
+        <activity android:name=".ui.dglab.DgLabActivity"
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.Light">
+        </activity>
+
         <activity android:name=".ui.dglab.DgLabV2Activity"
             android:exported="true"
             android:theme="@style/Theme.AppCompat.Light">
