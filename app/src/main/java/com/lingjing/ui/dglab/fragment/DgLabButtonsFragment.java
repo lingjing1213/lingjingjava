@@ -1,6 +1,7 @@
 package com.lingjing.ui.dglab.fragment;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +11,11 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import com.lingjing.R;
+import com.lingjing.data.model.DGLabV2Model;
+import com.lingjing.service.DGLabWebSocketClient;
+import com.lingjing.service.WebSocketMessageListener;
+
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * @Author：灵静
@@ -23,8 +29,17 @@ import com.lingjing.R;
 public class DgLabButtonsFragment extends Fragment {
 
     public static final String TAG = "DgLabButtonsFragment";
+
     private Button groupControlBut;
+
     private ButtonsFragmentCallBack buttonsFragmentCallBack;
+
+    private DGLabWebSocketClient dgLabWebSocketClient;
+
+    private final ConcurrentLinkedQueue<String> messageQueue = new ConcurrentLinkedQueue<>();
+
+    private Button diyBtn;
+
     public static DgLabButtonsFragment newInstance(){
         return new DgLabButtonsFragment();
     }
@@ -45,9 +60,10 @@ public class DgLabButtonsFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
     }
-//    接口，在父fragment里面实现，然后可以进行调用，使得替换fragment的方法可以直接写在父fragment中
+
+
+    //    接口，在父fragment里面实现，然后可以进行调用，使得替换fragment的方法可以直接写在父fragment中
     public interface ButtonsFragmentCallBack {
 //        新增
         void addFragment(Fragment fragment);

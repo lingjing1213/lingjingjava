@@ -17,7 +17,7 @@ public class LingJingConstants {
 
     public static final Integer CODE_LENGTH = 6;
 
-    public static final String DG_LAB_SOCKET_URL = "wss://noticeably-positive-bird.ngrok-free.app/appV1?userId=";
+    public static final String DG_LAB_SOCKET_URL = "wss://noticeably-positive-bird.ngrok-free.app/appV1";
 
     public static final String LOGIN_URL = "https://noticeably-positive-bird.ngrok-free.app/app/login";
 

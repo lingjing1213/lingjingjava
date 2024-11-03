@@ -16,6 +16,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.lingjing.service.WebSocketMessageListener;
 import com.lingjing.utils.BluetoothGattManager;
 import com.lingjing.utils.BluetoothUtils;
 
@@ -115,5 +116,7 @@ public class DgLabViewModel extends ViewModel {
     public LiveData<Boolean> getConnectionStatus() {
         return connectionStatus;
     }
+
+
 }
 

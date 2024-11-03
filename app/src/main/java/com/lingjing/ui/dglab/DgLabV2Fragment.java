@@ -2,20 +2,26 @@ package com.lingjing.ui.dglab;
 
 import android.app.AlertDialog;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.InputType;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+
 import com.lingjing.R;
 import com.lingjing.ui.dglab.fragment.DgLabButtonsFragment;
 import com.lingjing.utils.ToastUtils;
 
+import java.text.MessageFormat;
 import java.util.Objects;
 
 /**
@@ -27,7 +33,7 @@ import java.util.Objects;
  * @Filename：DgLabV2Fragmet
  * @Version：1.0.0
  */
-public class DgLabV2Fragment extends Fragment implements  DgLabButtonsFragment.ButtonsFragmentCallBack{
+public class DgLabV2Fragment extends Fragment implements DgLabButtonsFragment.ButtonsFragmentCallBack {
     public static final String TAG = "DgLabV2Fragment";
 
     private DgLabV2ViewModel dgLabV2ViewModel;
@@ -35,6 +41,17 @@ public class DgLabV2Fragment extends Fragment implements  DgLabButtonsFragment.B
     private TextView strengthAValueText;
 
     private TextView strengthBValueText;
+
+    private TextView batteryText;
+
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        dgLabV2ViewModel = new ViewModelProvider(requireActivity()).get(DgLabV2ViewModel.class);
+        // 在这里开始连接并读取电量
+        dgLabV2ViewModel.connectAndReadBattery(requireActivity().getApplicationContext());
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -44,16 +61,8 @@ public class DgLabV2Fragment extends Fragment implements  DgLabButtonsFragment.B
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        dgLabV2ViewModel = new ViewModelProvider(this).get(DgLabV2ViewModel.class);
-        if (savedInstanceState == null) {
-            DgLabButtonsFragment buttonsFragment = DgLabButtonsFragment.newInstance();
-            getChildFragmentManager().beginTransaction()
-                    .replace(R.id.buttonsFragmentContainer, buttonsFragment) // 这里的 id 是您在 fragment_dglabv2.xml 中为容器设置的
-                    .commit();
-        }
-
+        batteryText = view.findViewById(R.id.power);
         observeViewModel();
-
         setupButtons(view);
     }
 
@@ -61,6 +70,8 @@ public class DgLabV2Fragment extends Fragment implements  DgLabButtonsFragment.B
         dgLabV2ViewModel.getStrengthAValue().observe(getViewLifecycleOwner(), value -> strengthAValueText.setText(String.valueOf(value)));
 
         dgLabV2ViewModel.getStrengthBValue().observe(getViewLifecycleOwner(), value -> strengthBValueText.setText(String.valueOf(value)));
+
+        dgLabV2ViewModel.getBatteryLevel().observe(getViewLifecycleOwner(), batteryLevel -> batteryText.setText(MessageFormat.format("电量：{0}%", batteryLevel)));
     }
 
     private void setupButtons(View view) {
@@ -168,6 +179,7 @@ public class DgLabV2Fragment extends Fragment implements  DgLabButtonsFragment.B
     interface InputValueListener {
         void onInputValue(int value);
     }
+
     @Override
     public void addFragment(Fragment fragment) {
 //        getChildFragmentManager()方法可以获取自己的FragmentManager，而不是activity的FragmentManager，因为要管理的是子fragment
@@ -177,9 +189,18 @@ public class DgLabV2Fragment extends Fragment implements  DgLabButtonsFragment.B
                 .addToBackStack(null)
                 .commit();
     }
+
     @Override
     public void popFragment() {
         getChildFragmentManager().popBackStack();
+    }
+
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        // 停止读取电量（如果需要的话）
+        dgLabV2ViewModel.disconnect();
     }
 }
 

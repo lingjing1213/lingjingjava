@@ -41,51 +41,51 @@ public class DGLabConstants {
     /**
      * 呼吸波形
      */
-    public static final List<byte[]> breatheDataV2 = Arrays.asList(
-            new byte[]{1, 9, 0}, new byte[]{1, 9, 4},
-            new byte[]{1, 9, 8}, new byte[]{1, 9, 16},
-            new byte[]{1, 9, 20}, new byte[]{1, 9, 20},
-            new byte[]{1, 9, 20}, new byte[]{1, 9, 0},
-            new byte[]{1, 9, 0}, new byte[]{1, 9, 0},
-            new byte[]{1, 9, 0});
+    public static final List<int[]> breatheDataV2 = Arrays.asList(
+            new int[]{1, 9, 0}, new int[]{1, 9, 4},
+            new int[]{1, 9, 8}, new int[]{1, 9, 16},
+            new int[]{1, 9, 20}, new int[]{1, 9, 20},
+            new int[]{1, 9, 20}, new int[]{1, 9, 0},
+            new int[]{1, 9, 0}, new int[]{1, 9, 0},
+            new int[]{1, 9, 0});
 
     /**
      * 潮汐
      */
-    public static final List<byte[]> tidalDataV2 = Arrays.asList(
-            new byte[]{1, 9, 0}, new byte[]{1, 10, 3},
-            new byte[]{1, 12, 6}, new byte[]{1, 13, 10},
-            new byte[]{1, 15, 20}, new byte[]{1, 17, 20},
-            new byte[]{1, 18, 20}, new byte[]{1, 20, 0},
-            new byte[]{1, 21, 0}, new byte[]{1, 23, 0},
-            new byte[]{1, 25, 0}, new byte[]{1, 25, 0},
-            new byte[]{1, 26, 0}, new byte[]{1, 28, 0},
-            new byte[]{1, 29, 0}, new byte[]{1, 31, 0},
-            new byte[]{1, 33, 0}, new byte[]{1, 34, 0},
-            new byte[]{1, 36, 0}, new byte[]{1, 37, 0},
-            new byte[]{1, 39, 0}, new byte[]{1, 41, 0},
-            new byte[]{1, 9, 0});
+    public static final List<int[]> tidalDataV2 = Arrays.asList(
+            new int[]{1, 9, 0}, new int[]{1, 10, 3},
+            new int[]{1, 12, 6}, new int[]{1, 13, 10},
+            new int[]{1, 15, 20}, new int[]{1, 17, 20},
+            new int[]{1, 18, 20}, new int[]{1, 20, 0},
+            new int[]{1, 21, 0}, new int[]{1, 23, 0},
+            new int[]{1, 25, 0}, new int[]{1, 25, 0},
+            new int[]{1, 26, 0}, new int[]{1, 28, 0},
+            new int[]{1, 29, 0}, new int[]{1, 31, 0},
+            new int[]{1, 33, 0}, new int[]{1, 34, 0},
+            new int[]{1, 36, 0}, new int[]{1, 37, 0},
+            new int[]{1, 39, 0}, new int[]{1, 41, 0},
+            new int[]{1, 9, 0});
 
     /**
      * 不断变快
      */
-    public static final List<byte[]> accelerateDataV2 = Arrays.asList(
-            new byte[]{5, (byte) 135, 20}, new byte[]{5, 125, 20},
-            new byte[]{5, 115, 20}, new byte[]{5, 105, 20},
-            new byte[]{5, 95, 20}, new byte[]{4, 86, 20},
-            new byte[]{4, 76, 20}, new byte[]{4, 66, 20},
-            new byte[]{3, 57, 20}, new byte[]{3, 47, 20},
-            new byte[]{3, 37, 20}, new byte[]{2, 28, 20},
-            new byte[]{2, 18, 20}, new byte[]{1, 14, 20},
-            new byte[]{1, 9, 20});
+    public static final List<int[]> accelerateDataV2 = Arrays.asList(
+            new int[]{5, (byte) 135, 20}, new int[]{5, 125, 20},
+            new int[]{5, 115, 20}, new int[]{5, 105, 20},
+            new int[]{5, 95, 20}, new int[]{4, 86, 20},
+            new int[]{4, 76, 20}, new int[]{4, 66, 20},
+            new int[]{3, 57, 20}, new int[]{3, 47, 20},
+            new int[]{3, 37, 20}, new int[]{2, 28, 20},
+            new int[]{2, 18, 20}, new int[]{1, 14, 20},
+            new int[]{1, 9, 20});
 
     /**
      * 推力
      */
-    public static final List<byte[]> thrustDataV2 = Arrays.asList(
-            new byte[]{1, 9, 4}, new byte[]{1, 9, 8},
-            new byte[]{1, 9, 12}, new byte[]{1, 9, 16},
-            new byte[]{1, 9, 18}, new byte[]{1, 9, 19},
-            new byte[]{1, 9, 20}, new byte[]{1, 9, 0},
-            new byte[]{1, 9, 0}, new byte[]{1, 9, 0});
+    public static final List<int[]> thrustDataV2 = Arrays.asList(
+            new int[]{1, 9, 4}, new int[]{1, 9, 8},
+            new int[]{1, 9, 12}, new int[]{1, 9, 16},
+            new int[]{1, 9, 18}, new int[]{1, 9, 19},
+            new int[]{1, 9, 20}, new int[]{1, 9, 0},
+            new int[]{1, 9, 0}, new int[]{1, 9, 0});
 }

@@ -14,7 +14,12 @@ import java.nio.ByteOrder;
  */
 public class StrengthAndWaveUtils {
 
-    public static byte[] wave(int x, int y, int z) {
+    public static byte[] wave(int[] ints) {
+
+        int x=ints[0];
+        int y=ints[1];
+        int z=ints[2];
+
         int xBits = x & 0x1F;
         int yBits = (y & 0x3FF) << 5;
         int zBits = (z & 0x1F) << 15;
