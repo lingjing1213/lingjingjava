@@ -45,6 +45,9 @@ public enum ErrorTypes {
     //删除密钥对失败
     DELETE_KEY_PAIR_FAIL(20007, "删除密钥对失败"),
 
+    //json 解析失败
+    JSON_PARSE_FAIL(30000, "json 解析失败"),
+
     NETWORK_ERROR(99998, "网络连接失败"),
 
     UNKNOWN_ERROR(99999, "未知错误"),
