@@ -23,6 +23,8 @@ public class LingJingConstants {
 
     public static final String CHECK_USER_URL = "https://noticeably-positive-bird.ngrok-free.app/app/checkUser";
 
+    public static final String SAVE_WAVE_URL = "https://noticeably-positive-bird.ngrok-free.app/app/saveWave";
+
     public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
     public static final String KEYSTORE_ALIAS = "lingJing_rsa_key";

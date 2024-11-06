@@ -6,31 +6,43 @@ import static com.lingjing.constants.DGLabConstants.thrustDataV2;
 import static com.lingjing.constants.DGLabConstants.tidalDataV2;
 
 import android.annotation.SuppressLint;
+import android.app.Application;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Handler;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.lingjing.constants.DGLabConstants;
+import com.lingjing.constants.LingJingConstants;
 import com.lingjing.data.model.DGLabSocketMsg;
 import com.lingjing.data.model.DGLabV2Model;
+import com.lingjing.data.repository.DGLabSaveWaveRepository;
+import com.lingjing.enums.ErrorTypes;
+import com.lingjing.exceptions.LingJingException;
 import com.lingjing.service.DGLabWebSocketClient;
 import com.lingjing.service.WebSocketMessageListener;
 import com.lingjing.ui.home.HomeActivity;
 import com.lingjing.utils.BluetoothGattManager;
+import com.lingjing.utils.RSAUtils;
 import com.lingjing.utils.StrengthAndWaveUtils;
 import com.lingjing.utils.ToastUtils;
 
+import org.apache.commons.lang3.StringUtils;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -39,7 +51,11 @@ import java.util.List;
 import java.util.Queue;
 import java.util.UUID;
 
-public class DgLabV2ViewModel extends ViewModel implements WebSocketMessageListener {
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
+
+public class DgLabV2ViewModel extends AndroidViewModel implements WebSocketMessageListener {
 
     private static final String TAG = "DgLabV2ViewModel";
     private final DGLabV2Model dgLabV2Model = new DGLabV2Model();
@@ -57,10 +73,24 @@ public class DgLabV2ViewModel extends ViewModel implements WebSocketMessageListe
     private boolean isProcessingMessage = false; // 标志当前是否正在处理消息
     private final MutableLiveData<String> selectedWaveformText = new MutableLiveData<>();
     private DGLabWebSocketClient client;
+    private DGLabSaveWaveRepository saveWaveRepository = new DGLabSaveWaveRepository();
+    private MutableLiveData<Boolean> sendWaveResult = new MutableLiveData<>();
+
+    private final SharedPreferences sharedPreferences;
+
+    public DgLabV2ViewModel(@NonNull Application application) {
+        super(application);
+        sharedPreferences = getApplication().getSharedPreferences(LingJingConstants.SHARED_PREFS_NAME, Context.MODE_PRIVATE);
+    }
 
 
     public LiveData<String> getSelectedWaveformText() {
         return selectedWaveformText;
+    }
+
+
+    public LiveData<Boolean> getSendWaveResult() {
+        return sendWaveResult;
     }
 
     public void setSelectedWaveformText(String waveformText) {
@@ -352,5 +382,48 @@ public class DgLabV2ViewModel extends ViewModel implements WebSocketMessageListe
         }else {
             Log.d(TAG, "service is null");
         }
+    }
+
+
+    public void sendWaveData(String jsonData) {
+        String encryptedUserId = sharedPreferences.getString(LingJingConstants.USER_ID_KEY, null);
+        if (StringUtils.isBlank(encryptedUserId)){
+          sendWaveResult.setValue(false);
+          return;
+        }
+        String userId = "";
+        try {
+            userId = RSAUtils.decrypt(encryptedUserId);
+        } catch (LingJingException e) {
+            sendWaveResult.postValue(false);
+        }
+        JSONObject jsonObject = JSON.parseObject(jsonData);
+        jsonObject.put("userId", userId);
+        String jsonString = jsonObject.toJSONString();
+
+        saveWaveRepository.sendJsonData(jsonString, new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                sendWaveResult.setValue(false); // 网络请求失败
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    if (response.body() != null) {
+                        String responseBody = response.body().string();
+                        JSONObject jsonObject = JSONObject.parseObject(responseBody);
+                        String code = jsonObject.getString("code");
+                        if (ErrorTypes.LOGIN_SUCCESS.getCode().toString().equals(code)) {
+                            sendWaveResult.postValue(true);
+                        }else {
+                            sendWaveResult.postValue(false);
+                        }
+                    }
+                } else {
+                    sendWaveResult.setValue(false); // 发送失败
+                }
+            }
+        });
     }
 }

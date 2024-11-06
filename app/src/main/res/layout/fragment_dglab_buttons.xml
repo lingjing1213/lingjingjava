@@ -10,6 +10,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="40dp"
         android:text="自娱自乐"
+        android:background="@drawable/home_button_background"
         app:layout_constraintBottom_toTopOf="@+id/musicControl"
         app:layout_constraintStart_toStartOf="@+id/musicControl" />
 
@@ -19,6 +20,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="40dp"
         android:text="群组控制"
+        android:background="@drawable/home_button_background"
         app:layout_constraintBottom_toTopOf="@+id/importWaveform"
         app:layout_constraintEnd_toEndOf="@+id/importWaveform" />
 
@@ -26,9 +28,10 @@
         android:id="@+id/environmentControl"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="88dp"
+        android:layout_marginStart="70dp"
         android:layout_marginBottom="40dp"
         android:text="环境控制"
+        android:background="@drawable/home_button_background"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -36,9 +39,10 @@
         android:id="@+id/motionControl"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="88dp"
+        android:layout_marginEnd="70dp"
         android:layout_marginBottom="40dp"
         android:text="运动控制"
+        android:background="@drawable/home_button_background"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -48,6 +52,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="40dp"
         android:text="导入波形"
+        android:background="@drawable/home_button_background"
         app:layout_constraintBottom_toTopOf="@+id/motionControl"
         app:layout_constraintEnd_toEndOf="@+id/motionControl" />
 
@@ -57,6 +62,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="40dp"
         android:text="音乐控制"
+        android:background="@drawable/home_button_background"
         app:layout_constraintBottom_toTopOf="@+id/environmentControl"
         app:layout_constraintStart_toStartOf="@+id/environmentControl" />
 

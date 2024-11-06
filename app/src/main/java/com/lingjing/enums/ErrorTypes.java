@@ -48,6 +48,11 @@ public enum ErrorTypes {
     //json 解析失败
     JSON_PARSE_FAIL(30000, "json 解析失败"),
 
+    //操作成功
+    OPERATION_SUCCESS(40000, "操作成功"),
+    //操作失败
+    OPERATION_FAIL(40001, "操作失败"),
+
     NETWORK_ERROR(99998, "网络连接失败"),
 
     UNKNOWN_ERROR(99999, "未知错误"),
