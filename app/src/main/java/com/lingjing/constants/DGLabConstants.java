@@ -70,7 +70,7 @@ public class DGLabConstants {
      * 不断变快
      */
     public static final List<int[]> accelerateDataV2 = Arrays.asList(
-            new int[]{5, (byte) 135, 20}, new int[]{5, 125, 20},
+            new int[]{5, 135, 20}, new int[]{5, 125, 20},
             new int[]{5, 115, 20}, new int[]{5, 105, 20},
             new int[]{5, 95, 20}, new int[]{4, 86, 20},
             new int[]{4, 76, 20}, new int[]{4, 66, 20},
