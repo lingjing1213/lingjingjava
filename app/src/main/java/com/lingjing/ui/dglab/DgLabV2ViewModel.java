@@ -50,6 +50,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.UUID;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -77,6 +82,17 @@ public class DgLabV2ViewModel extends AndroidViewModel implements WebSocketMessa
     private MutableLiveData<Boolean> sendWaveResult = new MutableLiveData<>();
 
     private final SharedPreferences sharedPreferences;
+
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private ScheduledFuture<?> currentWaveformTask;
+    private boolean isTaskRunning = false;
+
+    /**
+     * 测试新增线程控制另一个通道
+     */
+
+
+
 
     public DgLabV2ViewModel(@NonNull Application application) {
         super(application);
@@ -192,7 +208,6 @@ public class DgLabV2ViewModel extends AndroidViewModel implements WebSocketMessa
             if (newState == BluetoothGatt.STATE_CONNECTED) {
                 gatt.discoverServices();
             } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
-                Log.e(TAG, "连接断开");
                 handler.removeCallbacks(batteryLevelRunnable); // 停止电量读取
             }
         }
@@ -226,7 +241,6 @@ public class DgLabV2ViewModel extends AndroidViewModel implements WebSocketMessa
                     byte[] value = characteristic.getValue();
                     if (value != null && value.length > 0) {
                         int battery = value[0] & 0xFF;
-                        Log.d(TAG, "Battery Level: " + battery);
                         batteryLevel.postValue(battery);
                     }
                 }
@@ -249,9 +263,11 @@ public class DgLabV2ViewModel extends AndroidViewModel implements WebSocketMessa
         }
     };
 
+    /**
+     * 断开连接
+     */
     @SuppressLint("MissingPermission")
     public void disconnect() {
-        Log.d(TAG, "断开连接");
         if (bluetoothGatt != null) {
             bluetoothGatt.disconnect();
             bluetoothGatt.close();
@@ -265,34 +281,95 @@ public class DgLabV2ViewModel extends AndroidViewModel implements WebSocketMessa
     public void processSocketMsgQueue() {
         if (!dgLabSocketMsgQueue.isEmpty() && client.isConnected) {
             isProcessingMessage = true;
-            DGLabSocketMsg msg = dgLabSocketMsgQueue.poll(); // 获取并移除队列的第一个元素
+            DGLabSocketMsg msg = dgLabSocketMsgQueue.poll();
             if (msg != null) {
                 int aIntensityValue = msg.getaValue();
                 int bIntensityValue = msg.getbValue();
                 int time = msg.getTime();
 
-                // 将强度值写入设备
                 writeIntensityToDevice(aIntensityValue, bIntensityValue);
                 String value = selectedWaveformText.getValue();
                 Log.d(TAG, "Selected waveform: " + value);
 
-                // 获取GroupControlkFragment上用户选中的波形
                 List<int[]> waveformData = getWaveformData(value);
 
-                // 每100毫秒从 breatheDataV2(list<int[]>) 中取出下一个元素，并在到达数组末尾时重新开始。执行time时间
+                // 串行执行选中的波形数据
                 processWaveformData(waveformData, time);
 
-                // 根据 time 值执行用户选择的波形的时间
                 Log.d(TAG, "开始执行波形，A通道强度: " + aIntensityValue + ", B通道强度: " + bIntensityValue + ", 执行时间: " + time + "秒");
 
-                // 延迟 time 秒后继续处理队列中的下一个消息
+                // 延迟 time 秒后继续处理下一条消息
                 handler.postDelayed(() -> {
-                    isProcessingMessage = false; // 处理完成，允许新消息
-                    processSocketMsgQueue(); // 继续处理下一条消息
+                    isProcessingMessage = false;
+                    processSocketMsgQueue();
                 }, time * 1000L);
             }
         } else if (!client.isConnected) {
             Log.d(TAG, "队列为空或未连接，无法处理消息");
+        }
+    }
+
+    private void processWaveformData(List<int[]> waveformData, int durationInSeconds) {
+        int totalIterations = durationInSeconds * 10;
+        int[] currentIndex = {0};
+
+        if (currentWaveformTask != null && !currentWaveformTask.isCancelled()) {
+            currentWaveformTask.cancel(false); // 停止之前的任务
+        }
+
+        Runnable waveformRunnable = () -> {
+            if (currentIndex[0] < totalIterations) {
+                int[] currentWaveform = waveformData.get(currentIndex[0] % waveformData.size());
+
+                // 执行写入 A 通道波形数据的逻辑
+                byte[] aWave = StrengthAndWaveUtils.wave(currentWaveform);
+
+                // 执行写入 B 通道波形数据的逻辑
+                byte[] bWave = StrengthAndWaveUtils.wave(currentWaveform);
+                writeWaveformDataSequentially(aWave,bWave);
+                currentIndex[0]++;
+            } else {
+                Log.d(TAG, "波形执行完毕");
+                if (currentWaveformTask != null) {
+                    currentWaveformTask.cancel(false); // 停止任务调度
+                }
+            }
+        };
+
+        // 每 100 毫秒执行一次波形任务
+        currentWaveformTask = scheduler.scheduleWithFixedDelay(waveformRunnable, 0, 100, TimeUnit.MILLISECONDS);
+    }
+
+
+
+
+    @SuppressLint("MissingPermission")
+    private void writeWaveformDataSequentially(byte[] aWave, byte[] bWave) {
+        if (bluetoothGatt == null) {
+            Log.d(TAG, "BluetoothGatt 未连接");
+            return;
+        }
+        BluetoothGattService service = bluetoothGatt.getService(UUID.fromString(DGLabConstants.DG_LAB_V2_PWM_AB_SERVICE));
+        if (service != null) {
+            // 写入 A 通道
+            BluetoothGattCharacteristic aChannelCharacteristic = service.getCharacteristic(UUID.fromString(DGLabConstants.DG_LAB_V2_WAVE_A_DIRECTION_CHARACTERISTIC));
+            if (aChannelCharacteristic != null) {
+                aChannelCharacteristic.setValue(aWave);
+                boolean writeSuccessA = bluetoothGatt.writeCharacteristic(aChannelCharacteristic);
+                Log.d(TAG, "写入A通道是否成功: " + writeSuccessA + ", Values: " + Arrays.toString(aWave));
+            }
+
+            // 延迟后写入 B 通道
+            handler.postDelayed(() -> {
+                BluetoothGattCharacteristic bChannelCharacteristic = service.getCharacteristic(UUID.fromString(DGLabConstants.DG_LAB_V2_WAVE_B_DIRECTION_CHARACTERISTIC));
+                if (bChannelCharacteristic != null) {
+                    bChannelCharacteristic.setValue(bWave);
+                    boolean writeSuccessB = bluetoothGatt.writeCharacteristic(bChannelCharacteristic);
+                    Log.d(TAG, "写入B通道是否成功: " + writeSuccessB + ", Values: " + Arrays.toString(bWave));
+                }
+            }, 50); // 50 毫秒延迟，可根据需要调整
+        } else {
+            Log.d(TAG, "未找到对应的Service");
         }
     }
 
@@ -336,60 +413,11 @@ public class DgLabV2ViewModel extends AndroidViewModel implements WebSocketMessa
         }
     }
 
-
-    private void processWaveformData(List<int[]> waveformData, int durationInSeconds) {
-        int totalIterations = durationInSeconds * 10; // 100ms 为一个周期，总周期数
-        int[] currentIndex = {0}; // 使用数组以便在内部类中修改
-
-        Runnable waveformRunnable = new Runnable() {
-            @Override
-            public void run() {
-                // 检查是否还需要继续执行
-                if (currentIndex[0] < totalIterations) {
-                    // 获取当前波形数据
-                    int[] currentWaveform = waveformData.get(currentIndex[0] % waveformData.size());
-
-                    // 执行写入当前波形数据的逻辑
-                    byte[] wave = StrengthAndWaveUtils.wave(currentWaveform);
-                    writeWaveformData(wave);
-
-                    // 更新索引
-                    currentIndex[0]++;
-
-                    // 安排下一次执行
-                    handler.postDelayed(this, 100); // 每100毫秒执行一次
-                } else {
-                    Log.d(TAG, "波形执行完毕");
-                }
-            }
-        };
-        // 启动波形处理任务
-        handler.post(waveformRunnable);
-    }
-
-    private void writeWaveformData(byte[] currentWaveform) {
-        if (bluetoothGatt == null){
-            return;
-        }
-        BluetoothGattService service = bluetoothGatt.getService(UUID.fromString(DGLabConstants.DG_LAB_V2_PWM_AB_SERVICE));
-        if (service != null) {
-            BluetoothGattCharacteristic bChannelCharacteristic = service.getCharacteristic(UUID.fromString(DGLabConstants.DG_LAB_V2_WAVE_B_DIRECTION_CHARACTERISTIC));
-            if (bChannelCharacteristic != null) {
-                bChannelCharacteristic.setValue(currentWaveform);
-                @SuppressLint("MissingPermission") boolean writeSuccess = bluetoothGatt.writeCharacteristic(bChannelCharacteristic);
-                Log.d(TAG, "Write success: " + writeSuccess + ", Values: " + Arrays.toString(currentWaveform));
-            }
-        }else {
-            Log.d(TAG, "service is null");
-        }
-    }
-
-
     public void sendWaveData(String jsonData) {
         String encryptedUserId = sharedPreferences.getString(LingJingConstants.USER_ID_KEY, null);
-        if (StringUtils.isBlank(encryptedUserId)){
-          sendWaveResult.setValue(false);
-          return;
+        if (StringUtils.isBlank(encryptedUserId)) {
+            sendWaveResult.setValue(false);
+            return;
         }
         String userId = "";
         try {
@@ -416,7 +444,7 @@ public class DgLabV2ViewModel extends AndroidViewModel implements WebSocketMessa
                         String code = jsonObject.getString("code");
                         if (ErrorTypes.LOGIN_SUCCESS.getCode().toString().equals(code)) {
                             sendWaveResult.postValue(true);
-                        }else {
+                        } else {
                             sendWaveResult.postValue(false);
                         }
                     }
