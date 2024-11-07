@@ -1,6 +1,5 @@
 package com.lingjing.ui.dglab.fragment;
 
-import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.text.Editable;
@@ -22,10 +21,8 @@ import com.alibaba.fastjson2.JSONObject;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.lingjing.R;
-import com.lingjing.data.model.DGLabV2Model;
 import com.lingjing.exceptions.LingJingException;
 import com.lingjing.service.DGLabWebSocketClient;
-import com.lingjing.service.WebSocketMessageListener;
 import com.lingjing.ui.dglab.DgLabV2ViewModel;
 import com.lingjing.utils.JsonArrayUtils;
 import com.lingjing.utils.ToastUtils;
@@ -61,6 +58,8 @@ public class DgLabButtonsFragment extends Fragment {
 
     private DgLabV2ViewModel dgLabV2ViewModel;
 
+    private EditText editTextJsonInput;
+
     public static DgLabButtonsFragment newInstance() {
         return new DgLabButtonsFragment();
     }
@@ -84,9 +83,30 @@ public class DgLabButtonsFragment extends Fragment {
 
         importWaveBtn = (Button) view.findViewById(R.id.importWaveform);
         importWaveBtn.setOnClickListener(v -> {
-            Log.d(TAG, "按钮点击了");
             showJsonInputDialog();
         });
+        observeSendWaveResult();
+    }
+
+    private void observeSendWaveResult() {
+        dgLabV2ViewModel.getSendWaveResult().observe(getViewLifecycleOwner(), isSuccess -> {
+            if (isSuccess != null && isSuccess) {
+                // 成功状态，添加与 wave 关联的按钮
+                addWaveAssociatedButton();
+            } else {
+                // 处理失败状态，例如显示错误信息
+                ToastUtils.showToast(getContext(), "添加波形数据失败");
+            }
+        });
+    }
+
+
+    private void addWaveAssociatedButton() {
+        Button waveButton = new Button(getContext());
+        String input = editTextJsonInput.getText().toString();
+        JSONObject jsonObject = JSON.parseObject(input);
+        String name = jsonObject.get("name").toString();
+        waveButton.setText(name);
 
     }
 
@@ -103,7 +123,7 @@ public class DgLabButtonsFragment extends Fragment {
         dialog.getBehavior().setPeekHeight(getResources().getDisplayMetrics().heightPixels / 2);
         dialog.getBehavior().setState(BottomSheetBehavior.STATE_EXPANDED);
 
-        EditText editTextJsonInput = dialog.findViewById(R.id.editTextJsonInput);
+        editTextJsonInput = dialog.findViewById(R.id.editTextJsonInput);
         Button buttonConfirm = dialog.findViewById(R.id.buttonConfirm);
 
         editTextJsonInput.addTextChangedListener(new TextWatcher() {
@@ -114,6 +134,7 @@ public class DgLabButtonsFragment extends Fragment {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 buttonConfirm.setEnabled(isValidJson(requireContext(), s.toString()));
+
             }
 
             @Override
@@ -137,13 +158,21 @@ public class DgLabButtonsFragment extends Fragment {
         try {
             boolean flag = false;
             JSONObject jsonObject = JSON.parseObject(jsonString);
-            if (jsonObject == null){
+            if (jsonObject == null) {
                 return false;
             }
             String wave = jsonObject.get("wave").toString();
             String name = jsonObject.get("name").toString();
-            if (StringUtils.isNotBlank(name) && StringUtils.isNotBlank(wave)){
-                flag= JsonArrayUtils.validateAndAssign(context, wave);
+            if (StringUtils.isNotBlank(name) && StringUtils.isNotBlank(wave)) {
+                if (name.length() > 8) {
+                    ToastUtils.showToast(context, "格式错误:name不能超过8个字。");
+                } else {
+                    flag = JsonArrayUtils.validateAndAssign(wave);
+                }
+
+                if (!flag) {
+                    ToastUtils.showToast(context, "格式错误:wave必须是一个有效的 JSON 数组。");
+                }
             }
             return flag;
         } catch (JSONException | LingJingException e) {

@@ -53,7 +53,6 @@ public class DgLabFragment extends Fragment {
                 result -> {
                     // 处理蓝牙启用的结果
                    dgLabViewModel.handleEnableBluetoothResult(result.getResultCode(), getActivity());
-
                 }
         );
 
@@ -75,38 +74,26 @@ public class DgLabFragment extends Fragment {
             }
             dgLabViewModel.checkBluetoothAndRequestPermissions(getActivity());
 
-            dgLabViewModel.startBluetoothScan(DGLabConstants.DG_LAB_V2_NAME, new BluetoothUtils.ScanCallback() {
-                @Override
-                public void onDeviceFound(BluetoothDevice device) {
-                    // 处理找到的设备
-                    ToastUtils.showToast(getContext(), "找到设备: " + device.getName());
-                    // 进行连接
-                    dgLabViewModel.connectToDevice(device);
+            dgLabViewModel.startBluetoothScan(DGLabConstants.DG_LAB_V2_NAME, device -> {
+                // 处理找到的设备
+                ToastUtils.showToast(getContext(), "找到设备: " + device.getName());
+                // 进行连接
+                dgLabViewModel.connectToDevice(device);
+            });
+
+            dgLabViewModel.getPermissionGranted().observe(getViewLifecycleOwner(), granted -> {
+                if (granted) {
+                    // 权限被授予，开始扫描设备
+                    dgLabViewModel.startBluetoothScan(DGLabConstants.DG_LAB_V2_NAME, device -> {
+                        // 进行连接
+                        dgLabViewModel.connectToDevice(device);
+                    });
+                } else {
+                    // 权限未授予，提示用户
+                    ToastUtils.showToast(getContext(), "请授予蓝牙权限");
                 }
             });
 
-            dgLabViewModel.getPermissionGranted().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
-                @Override
-                public void onChanged(Boolean granted) {
-                    if (granted) {
-                        // 权限被授予，开始扫描设备
-                        dgLabViewModel.startBluetoothScan(DGLabConstants.DG_LAB_V2_NAME, new BluetoothUtils.ScanCallback() {
-                            @Override
-                            public void onDeviceFound(BluetoothDevice device) {
-                                // 处理找到的设备
-                                //ToastUtils.showToast(getContext(), "找到设备: " + device.getName());
-                                // 进行连接
-                                dgLabViewModel.connectToDevice(device);
-                            }
-                        });
-                    } else {
-                        // 权限未授予，提示用户
-                        ToastUtils.showToast(getContext(), "请授予蓝牙权限");
-                    }
-                }
-            });
-
-            // 观察连接状态
             // 观察连接状态
             dgLabViewModel.getConnectionStatus().observe(getViewLifecycleOwner(), isConnected -> {
                 if (isConnected) {
@@ -121,7 +108,6 @@ public class DgLabFragment extends Fragment {
         dgLabV3Btn.setOnClickListener(v -> {
             ToastUtils.showToast(getContext(), "待开发");
         });
-
     }
 
     private void navigateToNextScreen() {
