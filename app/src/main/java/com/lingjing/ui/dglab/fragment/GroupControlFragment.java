@@ -76,10 +76,6 @@ public class GroupControlFragment extends Fragment {
             }
 
         });*/
-
-        dgLabV2ViewModel.getDeleteWaveResult().observe(this, deleteResult -> {
-            ToastUtils.showToast(requireContext(), ErrorTypes.getMsgByCode(deleteResult));
-        });
     }
 
     private void fetchDataAndAddButtons() {
@@ -130,6 +126,7 @@ public class GroupControlFragment extends Fragment {
                 .setPositiveButton("确定", (dialog, which) -> {
                     // 删除按钮及其数据
                     deleteButton(button);
+
                 })
                 .setNegativeButton("取消", null)
                 .show();
@@ -151,7 +148,6 @@ public class GroupControlFragment extends Fragment {
             sharedPreferences.edit()
                     .putString(LingJingConstants.WAVE_DATA_KEY, waveDataArray.toJSONString())
                     .apply();
-
             String rsaUserId = sharedPreferences.getString(LingJingConstants.USER_ID_KEY, "");
             String userId = null;
             try {
@@ -181,7 +177,12 @@ public class GroupControlFragment extends Fragment {
         setupPredefinedButtons();
 
         fetchDataAndAddButtons();
-
+        dgLabV2ViewModel.getDeleteWaveResult().observe(getViewLifecycleOwner(), deleteResult -> {
+            if (deleteResult != null) {
+                Log.d("Delete Result",ErrorTypes.getMsgByCode(deleteResult) );
+                ToastUtils.showToast(requireContext(), ErrorTypes.getMsgByCode(deleteResult));
+            }
+        });
 //        返回按钮的监听器，返回时关闭连接的方法不建议写在里面，应写在返回的回调中
         backBut.setOnClickListener((v) -> {
             buttonsFragmentCallBack.popFragment();
@@ -189,6 +190,7 @@ public class GroupControlFragment extends Fragment {
 
         connectButton.setOnClickListener(v -> {
             if (isButtonSelected) {
+
                 // 执行连接操作
                 SharedPreferences sharedPreferences = requireActivity().getSharedPreferences(LingJingConstants.SHARED_PREFS_NAME, MODE_PRIVATE);
                 String rsaUserId = sharedPreferences.getString(LingJingConstants.USER_ID_KEY, "");
@@ -219,4 +221,5 @@ public class GroupControlFragment extends Fragment {
             }
         }
     }
+
 }

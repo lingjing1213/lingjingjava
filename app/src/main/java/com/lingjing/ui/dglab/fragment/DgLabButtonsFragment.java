@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -46,7 +47,6 @@ public class DgLabButtonsFragment extends Fragment {
     private Button groupControlBut;
 
     private ButtonsFragmentCallBack buttonsFragmentCallBack;
-
 
     private final ConcurrentLinkedQueue<String> messageQueue = new ConcurrentLinkedQueue<>();
 
@@ -94,19 +94,12 @@ public class DgLabButtonsFragment extends Fragment {
 
     private void observeSendWaveResult() {
         dgLabV2ViewModel.getSendWaveResult().observe(getViewLifecycleOwner(), sendWaveResult -> {
+            Log.d(TAG, "sendWaveResult: " +ErrorTypes.getMsgByCode(sendWaveResult));
             ToastUtils.showToast(getContext(), ErrorTypes.getMsgByCode(sendWaveResult));
         });
     }
 
 
-/*    private void addWaveAssociatedButton() {
-        Button waveButton = new Button(getContext());
-        String input = editTextJsonInput.getText().toString();
-        JSONObject jsonObject = JSON.parseObject(input);
-        String name = jsonObject.get("name").toString();
-        waveButton.setText(name);
-
-    }*/
 
     private void showJsonInputDialog() {
         BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
@@ -140,12 +133,15 @@ public class DgLabButtonsFragment extends Fragment {
             }
         });
 
-        buttonConfirm.setOnClickListener(v -> {
-            String jsonInput = editTextJsonInput.getText().toString();
-            // 处理 JSON 数据
-            dgLabV2ViewModel.sendWaveData(jsonInput);
-            dialog.dismiss();
-        });
+        if (buttonConfirm != null) {
+            buttonConfirm.setOnClickListener(v -> {
+
+                String jsonInput = editTextJsonInput.getText().toString();
+                // 处理 JSON 数据
+                dgLabV2ViewModel.sendWaveData(jsonInput);
+                dialog.dismiss();
+            });
+        }
 
         dialog.show();
     }

@@ -35,6 +35,7 @@ import com.lingjing.service.DGLabWebSocketClient;
 import com.lingjing.service.WebSocketMessageListener;
 import com.lingjing.utils.BluetoothGattManager;
 import com.lingjing.utils.RSAUtils;
+import com.lingjing.utils.SingleLiveEventUtils;
 import com.lingjing.utils.StrengthAndWaveUtils;
 import com.lingjing.utils.ToastUtils;
 
@@ -91,7 +92,7 @@ public class DgLabV2ViewModel extends AndroidViewModel implements WebSocketMessa
 
     private final DGLabV2Repository dgLabV2Repository = new DGLabV2Repository();
 
-    private final MutableLiveData<Integer> sendWaveResult = new MutableLiveData<>();
+    private final SingleLiveEventUtils<Integer> sendWaveResult =  new SingleLiveEventUtils<>();
 
     private final SharedPreferences sharedPreferences;
 
@@ -101,20 +102,19 @@ public class DgLabV2ViewModel extends AndroidViewModel implements WebSocketMessa
 
     private final Map<String, List<int[]>> waveformDataMap = new HashMap<>(1);
 
-    private final MutableLiveData<Integer> deleteWaveResult = new MutableLiveData<>();
+    private final SingleLiveEventUtils<Integer> deleteWaveResult = new SingleLiveEventUtils<>();
 
     public DgLabV2ViewModel(@NonNull Application application) {
         super(application);
         sharedPreferences = getApplication().getSharedPreferences(LingJingConstants.SHARED_PREFS_NAME, Context.MODE_PRIVATE);
     }
 
-    public LiveData<Integer> getDeleteWaveResult() {
+    public SingleLiveEventUtils<Integer> getDeleteWaveResult() {
         return deleteWaveResult;
     }
 
-    public Map<String, List<int[]>> setWaveformDataMap(String waveName, List<int[]> wave) {
+    public void setWaveformDataMap(String waveName, List<int[]> wave) {
         waveformDataMap.put(waveName, wave);
-        return waveformDataMap;
     }
 
     public Map<String, List<int[]>> getWaveformData() {
@@ -126,7 +126,7 @@ public class DgLabV2ViewModel extends AndroidViewModel implements WebSocketMessa
     }
 
 
-    public LiveData<Integer> getSendWaveResult() {
+    public SingleLiveEventUtils<Integer> getSendWaveResult() {
         return sendWaveResult;
     }
 
