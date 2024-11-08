@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,8 +20,8 @@ import com.alibaba.fastjson2.JSONObject;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.lingjing.R;
+import com.lingjing.enums.ErrorTypes;
 import com.lingjing.exceptions.LingJingException;
-import com.lingjing.service.DGLabWebSocketClient;
 import com.lingjing.ui.dglab.DgLabV2ViewModel;
 import com.lingjing.utils.JsonArrayUtils;
 import com.lingjing.utils.ToastUtils;
@@ -48,7 +47,6 @@ public class DgLabButtonsFragment extends Fragment {
 
     private ButtonsFragmentCallBack buttonsFragmentCallBack;
 
-    private DGLabWebSocketClient dgLabWebSocketClient;
 
     private final ConcurrentLinkedQueue<String> messageQueue = new ConcurrentLinkedQueue<>();
 
@@ -70,9 +68,15 @@ public class DgLabButtonsFragment extends Fragment {
 //        获取父fragment的对象，然后转化为buttonsFragmentCallBack对象来存储
         buttonsFragmentCallBack = (ButtonsFragmentCallBack) getParentFragment();
         dgLabV2ViewModel = new ViewModelProvider(requireActivity()).get(DgLabV2ViewModel.class);
-        groupControlBut = (Button) viwe.findViewById(R.id.groupControl);
+        groupControlBut = viwe.findViewById(R.id.groupControl);
         groupControlBut.setOnClickListener((v) -> {
-            buttonsFragmentCallBack.addFragment(GroupControlkFragment.newInstance());
+            buttonsFragmentCallBack.addFragment(GroupControlFragment.newInstance());
+        });
+
+        diyBtn = viwe.findViewById(R.id.diy);
+
+        diyBtn.setOnClickListener(v -> {
+            buttonsFragmentCallBack.addFragment(DiyFragment.newInstance());
         });
         return viwe;
     }
@@ -81,7 +85,7 @@ public class DgLabButtonsFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        importWaveBtn = (Button) view.findViewById(R.id.importWaveform);
+        importWaveBtn = view.findViewById(R.id.importWaveform);
         importWaveBtn.setOnClickListener(v -> {
             showJsonInputDialog();
         });
@@ -89,26 +93,20 @@ public class DgLabButtonsFragment extends Fragment {
     }
 
     private void observeSendWaveResult() {
-        dgLabV2ViewModel.getSendWaveResult().observe(getViewLifecycleOwner(), isSuccess -> {
-            if (isSuccess != null && isSuccess) {
-                // 成功状态，添加与 wave 关联的按钮
-                addWaveAssociatedButton();
-            } else {
-                // 处理失败状态，例如显示错误信息
-                ToastUtils.showToast(getContext(), "添加波形数据失败");
-            }
+        dgLabV2ViewModel.getSendWaveResult().observe(getViewLifecycleOwner(), sendWaveResult -> {
+            ToastUtils.showToast(getContext(), ErrorTypes.getMsgByCode(sendWaveResult));
         });
     }
 
 
-    private void addWaveAssociatedButton() {
+/*    private void addWaveAssociatedButton() {
         Button waveButton = new Button(getContext());
         String input = editTextJsonInput.getText().toString();
         JSONObject jsonObject = JSON.parseObject(input);
         String name = jsonObject.get("name").toString();
         waveButton.setText(name);
 
-    }
+    }*/
 
     private void showJsonInputDialog() {
         BottomSheetDialog dialog = new BottomSheetDialog(requireContext());

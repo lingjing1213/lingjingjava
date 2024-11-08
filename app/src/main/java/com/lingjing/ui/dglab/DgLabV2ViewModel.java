@@ -12,7 +12,6 @@ import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Handler;
 import android.util.Log;
@@ -21,20 +20,19 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModel;
 
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.lingjing.constants.DGLabConstants;
 import com.lingjing.constants.LingJingConstants;
 import com.lingjing.data.model.DGLabSocketMsg;
 import com.lingjing.data.model.DGLabV2Model;
-import com.lingjing.data.repository.DGLabSaveWaveRepository;
+import com.lingjing.data.repository.DGLabV2Repository;
 import com.lingjing.enums.ErrorTypes;
 import com.lingjing.exceptions.LingJingException;
 import com.lingjing.service.DGLabWebSocketClient;
 import com.lingjing.service.WebSocketMessageListener;
-import com.lingjing.ui.home.HomeActivity;
 import com.lingjing.utils.BluetoothGattManager;
 import com.lingjing.utils.RSAUtils;
 import com.lingjing.utils.StrengthAndWaveUtils;
@@ -46,11 +44,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.UUID;
-import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -63,49 +62,71 @@ import okhttp3.Response;
 public class DgLabV2ViewModel extends AndroidViewModel implements WebSocketMessageListener {
 
     private static final String TAG = "DgLabV2ViewModel";
+
     private final DGLabV2Model dgLabV2Model = new DGLabV2Model();
 
     private final MutableLiveData<Integer> strengthAValue = new MutableLiveData<>(0);
+
     private final MutableLiveData<Integer> strengthBValue = new MutableLiveData<>(0);
+
     private final MutableLiveData<Integer> batteryLevel = new MutableLiveData<>();
-    private Queue<DGLabSocketMsg> dgLabSocketMsgQueue = new LinkedList<>();
+
+    private final Queue<DGLabSocketMsg> dgLabSocketMsgQueue = new LinkedList<>();
+
     private boolean isPlayingA = false;
+
     private boolean isPlayingB = false;
 
     private BluetoothGatt bluetoothGatt;
-    private Handler handler = new Handler();
+
+    private final Handler handler = new Handler();
+
     private Runnable batteryLevelRunnable;
+
     private boolean isProcessingMessage = false; // 标志当前是否正在处理消息
+
     private final MutableLiveData<String> selectedWaveformText = new MutableLiveData<>();
+
     private DGLabWebSocketClient client;
-    private DGLabSaveWaveRepository saveWaveRepository = new DGLabSaveWaveRepository();
-    private MutableLiveData<Boolean> sendWaveResult = new MutableLiveData<>();
+
+    private final DGLabV2Repository dgLabV2Repository = new DGLabV2Repository();
+
+    private final MutableLiveData<Integer> sendWaveResult = new MutableLiveData<>();
 
     private final SharedPreferences sharedPreferences;
 
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
     private ScheduledFuture<?> currentWaveformTask;
-    private boolean isTaskRunning = false;
 
-    /**
-     * 测试新增线程控制另一个通道
-     */
+    private final Map<String, List<int[]>> waveformDataMap = new HashMap<>(1);
 
-
-
+    private final MutableLiveData<Integer> deleteWaveResult = new MutableLiveData<>();
 
     public DgLabV2ViewModel(@NonNull Application application) {
         super(application);
         sharedPreferences = getApplication().getSharedPreferences(LingJingConstants.SHARED_PREFS_NAME, Context.MODE_PRIVATE);
     }
 
+    public LiveData<Integer> getDeleteWaveResult() {
+        return deleteWaveResult;
+    }
+
+    public Map<String, List<int[]>> setWaveformDataMap(String waveName, List<int[]> wave) {
+        waveformDataMap.put(waveName, wave);
+        return waveformDataMap;
+    }
+
+    public Map<String, List<int[]>> getWaveformData() {
+        return waveformDataMap;
+    }
 
     public LiveData<String> getSelectedWaveformText() {
         return selectedWaveformText;
     }
 
 
-    public LiveData<Boolean> getSendWaveResult() {
+    public LiveData<Integer> getSendWaveResult() {
         return sendWaveResult;
     }
 
@@ -276,8 +297,6 @@ public class DgLabV2ViewModel extends AndroidViewModel implements WebSocketMessa
         }
     }
 
-    //当用户启动了socket连接以后，监听队列(dgLabSocketMsgQueue)中是否有数据选择是否执行，有数据获取第一个数据，把 intAValue写入通道A intBValue写入通道B，time为执行用户选择的波形的时间
-
     public void processSocketMsgQueue() {
         if (!dgLabSocketMsgQueue.isEmpty() && client.isConnected) {
             isProcessingMessage = true;
@@ -290,9 +309,11 @@ public class DgLabV2ViewModel extends AndroidViewModel implements WebSocketMessa
                 writeIntensityToDevice(aIntensityValue, bIntensityValue);
                 String value = selectedWaveformText.getValue();
                 Log.d(TAG, "Selected waveform: " + value);
-
                 List<int[]> waveformData = getWaveformData(value);
-
+                if (waveformData.isEmpty()) {
+                    waveformData = waveformDataMap.get(value);
+                }
+                Log.d(TAG, "Waveform data : " + waveformData);
                 // 串行执行选中的波形数据
                 processWaveformData(waveformData, time);
 
@@ -306,6 +327,21 @@ public class DgLabV2ViewModel extends AndroidViewModel implements WebSocketMessa
             }
         } else if (!client.isConnected) {
             Log.d(TAG, "队列为空或未连接，无法处理消息");
+        }
+    }
+
+    public List<int[]> getWaveformData(String waveformText) {
+        switch (waveformText) {
+            case "呼吸":
+                return new ArrayList<>(breatheDataV2);
+            case "潮汐":
+                return new ArrayList<>(tidalDataV2);
+            case "加快":
+                return new ArrayList<>(accelerateDataV2);
+            case "推力":
+                return new ArrayList<>(thrustDataV2);
+            default:
+                return Collections.emptyList(); // 或者返回 null，根据你的需求
         }
     }
 
@@ -326,7 +362,7 @@ public class DgLabV2ViewModel extends AndroidViewModel implements WebSocketMessa
 
                 // 执行写入 B 通道波形数据的逻辑
                 byte[] bWave = StrengthAndWaveUtils.wave(currentWaveform);
-                writeWaveformDataSequentially(aWave,bWave);
+                writeWaveformDataSequentially(aWave, bWave);
                 currentIndex[0]++;
             } else {
                 Log.d(TAG, "波形执行完毕");
@@ -335,12 +371,9 @@ public class DgLabV2ViewModel extends AndroidViewModel implements WebSocketMessa
                 }
             }
         };
-
         // 每 100 毫秒执行一次波形任务
         currentWaveformTask = scheduler.scheduleWithFixedDelay(waveformRunnable, 0, 100, TimeUnit.MILLISECONDS);
     }
-
-
 
 
     @SuppressLint("MissingPermission")
@@ -353,20 +386,27 @@ public class DgLabV2ViewModel extends AndroidViewModel implements WebSocketMessa
         if (service != null) {
             // 写入 A 通道
             BluetoothGattCharacteristic aChannelCharacteristic = service.getCharacteristic(UUID.fromString(DGLabConstants.DG_LAB_V2_WAVE_A_DIRECTION_CHARACTERISTIC));
-            if (aChannelCharacteristic != null) {
-                aChannelCharacteristic.setValue(aWave);
-                boolean writeSuccessA = bluetoothGatt.writeCharacteristic(aChannelCharacteristic);
-                Log.d(TAG, "写入A通道是否成功: " + writeSuccessA + ", Values: " + Arrays.toString(aWave));
+
+            if (strengthAValue.getValue() > 0) {
+                if (aChannelCharacteristic != null) {
+                    aChannelCharacteristic.setValue(aWave);
+                    boolean writeSuccessA = bluetoothGatt.writeCharacteristic(aChannelCharacteristic);
+                    Log.d(TAG, "写入A通道是否成功: " + writeSuccessA + ", Values: " + Arrays.toString(aWave));
+                }
             }
 
             // 延迟后写入 B 通道
             handler.postDelayed(() -> {
                 BluetoothGattCharacteristic bChannelCharacteristic = service.getCharacteristic(UUID.fromString(DGLabConstants.DG_LAB_V2_WAVE_B_DIRECTION_CHARACTERISTIC));
-                if (bChannelCharacteristic != null) {
-                    bChannelCharacteristic.setValue(bWave);
-                    boolean writeSuccessB = bluetoothGatt.writeCharacteristic(bChannelCharacteristic);
-                    Log.d(TAG, "写入B通道是否成功: " + writeSuccessB + ", Values: " + Arrays.toString(bWave));
+
+                if (strengthBValue.getValue() > 0) {
+                    if (bChannelCharacteristic != null) {
+                        bChannelCharacteristic.setValue(bWave);
+                        boolean writeSuccessB = bluetoothGatt.writeCharacteristic(bChannelCharacteristic);
+                        Log.d(TAG, "写入B通道是否成功: " + writeSuccessB + ", Values: " + Arrays.toString(bWave));
+                    }
                 }
+
             }, 50); // 50 毫秒延迟，可根据需要调整
         } else {
             Log.d(TAG, "未找到对应的Service");
@@ -398,59 +438,85 @@ public class DgLabV2ViewModel extends AndroidViewModel implements WebSocketMessa
         }
     }
 
-    public List<int[]> getWaveformData(String waveformText) {
-        switch (waveformText) {
-            case "呼吸":
-                return new ArrayList<>(breatheDataV2);
-            case "潮汐":
-                return new ArrayList<>(tidalDataV2);
-            case "变快":
-                return new ArrayList<>(accelerateDataV2);
-            case "推力":
-                return new ArrayList<>(thrustDataV2);
-            default:
-                return Collections.emptyList(); // 或者返回 null，根据你的需求
-        }
-    }
 
     public void sendWaveData(String jsonData) {
         String encryptedUserId = sharedPreferences.getString(LingJingConstants.USER_ID_KEY, null);
         if (StringUtils.isBlank(encryptedUserId)) {
-            sendWaveResult.setValue(false);
+            sendWaveResult.setValue(ErrorTypes.UNKNOWN_ERROR.getCode());
             return;
         }
         String userId = "";
         try {
             userId = RSAUtils.decrypt(encryptedUserId);
         } catch (LingJingException e) {
-            sendWaveResult.postValue(false);
+            sendWaveResult.setValue(ErrorTypes.UNKNOWN_ERROR.getCode());
         }
-        JSONObject jsonObject = JSON.parseObject(jsonData);
-        jsonObject.put("userId", userId);
-        String jsonString = jsonObject.toJSONString();
+        JSONObject jsonWaveObject = JSON.parseObject(jsonData);
+        jsonWaveObject.put("userId", userId);
+        String jsonString = jsonWaveObject.toJSONString();
 
-        saveWaveRepository.sendJsonData(jsonString, new Callback() {
+        dgLabV2Repository.sendJsonData(jsonString, new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                sendWaveResult.setValue(false); // 网络请求失败
+                sendWaveResult.setValue(ErrorTypes.NETWORK_ERROR.getCode()); // 网络请求失败
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if (response.isSuccessful()) {
                     if (response.body() != null) {
                         String responseBody = response.body().string();
                         JSONObject jsonObject = JSONObject.parseObject(responseBody);
                         String code = jsonObject.getString("code");
-                        if (ErrorTypes.LOGIN_SUCCESS.getCode().toString().equals(code)) {
-                            sendWaveResult.postValue(true);
+                        Log.d(TAG, "新增波形: " + code);
+                        if (ErrorTypes.ADD_WAVE_SUCCESS.getCode().toString().equals(code)) {
+                            String existingDataJson = sharedPreferences.getString(LingJingConstants.WAVE_DATA_KEY, "[]");
+                            JSONArray existingDataArray = JSON.parseArray(existingDataJson);
+                            existingDataArray.add(jsonWaveObject);
+                            sharedPreferences.edit()
+                                    .putString(LingJingConstants.WAVE_DATA_KEY, existingDataArray.toJSONString())
+                                    .apply();
+
+                            sendWaveResult.postValue(Integer.parseInt(code));
                         } else {
-                            sendWaveResult.postValue(false);
+                            sendWaveResult.postValue(Integer.parseInt(code));
                         }
                     }
                 } else {
-                    sendWaveResult.setValue(false); // 发送失败
+                    sendWaveResult.setValue(ErrorTypes.ADD_WAVE_FAIL.getCode()); // 发送失败
                 }
+            }
+        });
+    }
+
+    /**
+     * 删除服务器上的波形数据
+     *
+     * @param userId
+     * @param buttonName
+     */
+    public void deleteWaveData(String userId, String buttonName) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("userId", userId);
+        jsonObject.put("name", buttonName);
+
+        dgLabV2Repository.deleteWaveData(jsonObject.toJSONString(), new Callback() {
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    if (response.body() != null) {
+                        String responseBody = response.body().string();
+                        JSONObject jsonObject = JSONObject.parseObject(responseBody);
+                        String code = jsonObject.getString("code");
+                        Log.d(TAG, "删除结果: " + code);
+                        deleteWaveResult.postValue(Integer.parseInt(code));
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                deleteWaveResult.postValue(ErrorTypes.NETWORK_ERROR.getCode());
             }
         });
     }

@@ -2,10 +2,14 @@ package com.lingjing.utils;
 
 import android.content.Context;
 
+import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONException;
 import com.lingjing.enums.ErrorTypes;
 import com.lingjing.exceptions.LingJingException;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @Author：灵静
@@ -72,5 +76,25 @@ public class JsonArrayUtils {
         } catch (JSONException e) {
             throw new LingJingException(ErrorTypes.JSON_PARSE_FAIL, e);
         }
+    }
+
+
+    public static List<int[]> convertJsonToIntArrayList(String waveDataJson) {
+        List<int[]> waveDataList = new ArrayList<>();
+
+        // 解析 JSON 字符串为 JSONArray
+        JSONArray jsonArray = JSON.parseArray(waveDataJson);
+
+        // 遍历 JSONArray，转换每个数组为 int[]
+        for (int i = 0; i < jsonArray.size(); i++) {
+            JSONArray innerArray = jsonArray.getJSONArray(i);
+            int[] waveData = new int[innerArray.size()];
+            for (int j = 0; j < innerArray.size(); j++) {
+                waveData[j] = innerArray.getInteger(j);
+            }
+            waveDataList.add(waveData);
+        }
+
+        return waveDataList;
     }
 }

@@ -195,7 +195,6 @@ public class DgLabV2Fragment extends Fragment implements DgLabButtonsFragment.Bu
         getChildFragmentManager().popBackStack();
     }
 
-
     @Override
     public void onStop() {
         super.onStop();

@@ -4,10 +4,6 @@ import static android.content.Context.MODE_PRIVATE;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
-
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,34 +12,39 @@ import android.widget.Button;
 import android.widget.GridLayout;
 import android.widget.ImageButton;
 
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
+
 import com.lingjing.R;
 import com.lingjing.constants.LingJingConstants;
 import com.lingjing.exceptions.LingJingException;
-import com.lingjing.service.DGLabWebSocketClient;
 import com.lingjing.ui.dglab.DgLabV2ViewModel;
 import com.lingjing.utils.RSAUtils;
 
 /**
- * @Author：hifter
+ * @Author：灵静
  * @Package：com.lingjing.ui.dglab.fragment
  * @Project：lingjingjava
- * @name：GroupControlkFragment
- * @Date：2024/11/2 下午1:00
- * @Filename：GroupControlkFragment
+ * @name：DiyFragment
+ * @Date：2024/11/7 下午8:14
+ * @Filename：DiyFragment
  * @Version：1.0.0
  */
-
-public class GroupControlkFragment extends Fragment {
+public class DiyFragment extends Fragment {
     private DgLabButtonsFragment.ButtonsFragmentCallBack buttonsFragmentCallBack;
+
     private ImageButton backBut;
+
     private Button connectButton; // 添加连接按钮
+
     private boolean isButtonSelected = false; // 用于跟踪按钮选择状态
 
     private DgLabV2ViewModel dgLabV2ViewModel;
 
-    public static GroupControlkFragment newInstance() {
-        return new GroupControlkFragment();
+    public static DiyFragment newInstance() {
+        return new DiyFragment();
     }
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -56,7 +57,7 @@ public class GroupControlkFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_group_controlk, container, false);
+        View view = inflater.inflate(R.layout.fragment_group_control, container, false);
         backBut = view.findViewById(R.id.back_but);
         connectButton = view.findViewById(R.id.connect_but);
         connectButton.setEnabled(false);
@@ -73,7 +74,7 @@ public class GroupControlkFragment extends Fragment {
                 });
             }
         }
-//        返回按钮的监听器，返回时关闭连接的方法不建议写在里面，应写在返回的回调中
+//        返回按钮的监听器，返回时关闭连接的方法不建议写在里面，应写在返回的回调中 303493
         backBut.setOnClickListener((v)->{
             buttonsFragmentCallBack.popFragment();
         });
@@ -85,7 +86,7 @@ public class GroupControlkFragment extends Fragment {
                 String rsaUserId = sharedPreferences.getString(LingJingConstants.USER_ID_KEY, "");
                 String userId = null;
                 try {
-                   userId = RSAUtils.decrypt(rsaUserId);
+                    userId = RSAUtils.decrypt(rsaUserId);
                 } catch (LingJingException e) {
                     Log.e("GroupControlkFragment", "解密失败", e);
                 }
@@ -96,4 +97,5 @@ public class GroupControlkFragment extends Fragment {
 
         return view;
     }
+
 }

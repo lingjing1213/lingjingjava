@@ -48,6 +48,14 @@ public enum ErrorTypes {
     //json 解析失败
     JSON_PARSE_FAIL(30000, "json 解析失败"),
 
+    //新增波形成功
+    ADD_WAVE_SUCCESS(40000, "新增波形成功"),
+    //新增波形失败
+    ADD_WAVE_FAIL(40001, "新增波形失败"),
+    //删除波形成功
+    DELETE_WAVE_SUCCESS(40002, "删除波形成功"),
+    //删除波形失败
+    DELETE_WAVE_FAIL(40003, "删除波形失败"),
     //操作成功
     OPERATION_SUCCESS(40000, "操作成功"),
     //操作失败

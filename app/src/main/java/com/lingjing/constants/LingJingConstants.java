@@ -21,9 +21,11 @@ public class LingJingConstants {
 
     public static final String LOGIN_URL = "https://noticeably-positive-bird.ngrok-free.app/app/login";
 
-    public static final String CHECK_USER_URL = "https://noticeably-positive-bird.ngrok-free.app/app/checkUser";
+   /* public static final String CHECK_USER_URL = "https://noticeably-positive-bird.ngrok-free.app/app/checkUser";*/
 
     public static final String SAVE_WAVE_URL = "https://noticeably-positive-bird.ngrok-free.app/app/saveWave";
+
+    public static final String DELETE_WAVE_URL = "https://noticeably-positive-bird.ngrok-free.app/app/deleteWave";
 
     public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
@@ -39,4 +41,5 @@ public class LingJingConstants {
 
     public static final String EXPIRE_TIME_KEY="expireTime";
 
+    public static final String WAVE_DATA_KEY = "waveData";
 }

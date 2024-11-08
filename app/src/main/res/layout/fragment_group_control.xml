@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/fragment_container_border"
-    tools:context=".ui.dglab.fragment.GroupControlkFragment">
+    tools:context=".ui.dglab.fragment.GroupControlFragment">
 
     <ImageButton
         android:id="@+id/back_but"
@@ -47,25 +47,13 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:text="变快" />
+                android:text="加快" />
 
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:text="推力" />
-
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="Button 5" />
-
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="Button 6" />
         </GridLayout>
     </ScrollView>
 
