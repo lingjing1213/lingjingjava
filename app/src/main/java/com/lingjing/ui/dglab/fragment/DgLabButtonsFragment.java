@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -76,7 +75,7 @@ public class DgLabButtonsFragment extends Fragment {
         diyBtn = viwe.findViewById(R.id.diy);
 
         diyBtn.setOnClickListener(v -> {
-            buttonsFragmentCallBack.addFragment(DiyFragment.newInstance());
+            buttonsFragmentCallBack.addFragment(SelfControlFragment.newInstance());
         });
         return viwe;
     }
@@ -89,14 +88,11 @@ public class DgLabButtonsFragment extends Fragment {
         importWaveBtn.setOnClickListener(v -> {
             showJsonInputDialog();
         });
-        observeSendWaveResult();
+        observeViewModel();
     }
 
-    private void observeSendWaveResult() {
-        dgLabV2ViewModel.getSendWaveResult().observe(getViewLifecycleOwner(), sendWaveResult -> {
-            Log.d(TAG, "sendWaveResult: " +ErrorTypes.getMsgByCode(sendWaveResult));
-            ToastUtils.showToast(getContext(), ErrorTypes.getMsgByCode(sendWaveResult));
-        });
+    private void observeViewModel() {
+        dgLabV2ViewModel.getSendWaveResult().observe(getViewLifecycleOwner(), sendWaveResult -> ToastUtils.showToast(getContext(), ErrorTypes.getMsgByCode(sendWaveResult)));
     }
 
 

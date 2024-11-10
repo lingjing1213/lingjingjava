@@ -19,4 +19,29 @@
     <color name="colorButtonDefault">#C5A3C5</color>
     <color name="colorButtonPressed">#8A5C8A</color>
 
+
+    <!-- 背景颜色 -->
+    <color name="background_color">#F5F5F5</color>
+
+    <!-- 主要文本颜色 -->
+    <color name="primary_text">#212121</color>
+
+    <!-- 次要文本颜色 -->
+    <color name="secondary_text">#757575</color>
+
+    <!-- 输入框背景颜色 -->
+    <color name="edittext_background">#FFFFFF</color>
+
+    <!-- 滑动条的颜色 -->
+    <color name="seekbar_thumb">#FF9800</color>
+    <color name="seekbar_progress">#FFC107</color>
+    <color name="seekbar_track">#BDBDBD</color>
+
+    <!-- 按钮和控件的颜色 -->
+    <color name="button_color">#03A9F4</color>
+    <color name="button_text_color">#FFFFFF</color>
+
+    <!-- 边框颜色 -->
+    <color name="border_color">#DDDDDD</color>
+
 </resources>

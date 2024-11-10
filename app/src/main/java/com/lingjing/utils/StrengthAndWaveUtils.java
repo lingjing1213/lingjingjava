@@ -19,7 +19,6 @@ public class StrengthAndWaveUtils {
         int x=ints[0];
         int y=ints[1];
         int z=ints[2];
-
         int xBits = x & 0x1F;
         int yBits = (y & 0x3FF) << 5;
         int zBits = (z & 0x1F) << 15;
@@ -48,5 +47,18 @@ public class StrengthAndWaveUtils {
                 (byte) ((data >> 8) & 0xFF),  // 第二个字节
                 (byte) ((data >> 16) & 0xFF)  // 第三个字节
         };*/
+    }
+
+    public static byte[] wave(int x, int y, int z) {
+        int xBits = x & 0x1F;
+        int yBits = (y & 0x3FF) << 5;
+        int zBits = (z & 0x1F) << 15;
+        int data = zBits | yBits | xBits;
+
+        return new byte[]{
+                (byte) (data & 0xFF),          // 第一个字节
+                (byte) ((data >> 8) & 0xFF),   // 第二个字节
+                (byte) ((data >> 16) & 0xFF)   // 第三个字节
+        };
     }
 }

@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/fragment_container_border"
-    tools:context=".ui.dglab.fragment.GroupControlFragment">
+    tools:context=".ui.dglab.fragment.SelfControlFragment">
 
     <Button
         android:id="@+id/back_but"
@@ -15,11 +15,13 @@
         android:background="@color/colorButtonDefault"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="200dp"
-        app:layout_constraintBottom_toTopOf="@+id/connect_but"
+        android:layout_marginTop="40dp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/back_but">
 
@@ -27,10 +29,17 @@
             android:id="@+id/gridLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
             android:alignmentMode="alignMargins"
             android:columnCount="3"
-            android:useDefaultMargins="true"
-            android:layout_gravity="center_horizontal">
+            android:useDefaultMargins="true">
+
+            <Button
+                android:id="@+id/diy_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="自定义" />
 
             <Button
                 android:layout_width="wrap_content"
@@ -57,14 +66,5 @@
                 android:text="推力" />
         </GridLayout>
     </ScrollView>
-
-    <Button
-        android:id="@+id/connect_but"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="连接"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

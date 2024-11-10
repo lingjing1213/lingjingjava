@@ -74,9 +74,8 @@ public class DGLabWebSocketClient {
             }
             @Override
             public void onFailure(@NonNull WebSocket webSocket, @NonNull Throwable t, Response response) {
-                // 连接失败，尝试重连
-              //  reconnect();
-                Log.e("DGLabWebSocketClient", "WebSocket connection failed: " + t.getMessage());
+
+
             }
 
             @Override

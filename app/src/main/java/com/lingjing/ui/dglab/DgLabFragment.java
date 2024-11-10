@@ -37,7 +37,6 @@ public class DgLabFragment extends Fragment {
 
     private DgLabViewModel dgLabViewModel;
 
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_dglab_version, container, false);
@@ -47,7 +46,6 @@ public class DgLabFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
         ActivityResultLauncher<Intent> bluetoothActivityResultLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
@@ -62,8 +60,6 @@ public class DgLabFragment extends Fragment {
 
         Button dgLabV2Btn = view.findViewById(R.id.dgLabV2Btn);
         Button dgLabV3Btn = view.findViewById(R.id.dgLabV3Btn);
-
-
 
         dgLabV2Btn.setOnClickListener(v -> {
             BluetoothGatt bluetoothGatt = BluetoothGattManager.getInstance().getBluetoothGatt();

@@ -14,6 +14,7 @@ import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Handler;
+import android.os.ParcelUuid;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -42,6 +43,7 @@ import com.lingjing.utils.ToastUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
+import java.io.PipedReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -74,10 +76,6 @@ public class DgLabV2ViewModel extends AndroidViewModel implements WebSocketMessa
 
     private final Queue<DGLabSocketMsg> dgLabSocketMsgQueue = new LinkedList<>();
 
-    private boolean isPlayingA = false;
-
-    private boolean isPlayingB = false;
-
     private BluetoothGatt bluetoothGatt;
 
     private final Handler handler = new Handler();
@@ -92,7 +90,7 @@ public class DgLabV2ViewModel extends AndroidViewModel implements WebSocketMessa
 
     private final DGLabV2Repository dgLabV2Repository = new DGLabV2Repository();
 
-    private final SingleLiveEventUtils<Integer> sendWaveResult =  new SingleLiveEventUtils<>();
+    private final SingleLiveEventUtils<Integer> sendWaveResult = new SingleLiveEventUtils<>();
 
     private final SharedPreferences sharedPreferences;
 
@@ -103,6 +101,10 @@ public class DgLabV2ViewModel extends AndroidViewModel implements WebSocketMessa
     private final Map<String, List<int[]>> waveformDataMap = new HashMap<>(1);
 
     private final SingleLiveEventUtils<Integer> deleteWaveResult = new SingleLiveEventUtils<>();
+
+    private final SingleLiveEventUtils<Boolean> socketFlag = new SingleLiveEventUtils<>();
+
+
 
     public DgLabV2ViewModel(@NonNull Application application) {
         super(application);
@@ -146,32 +148,22 @@ public class DgLabV2ViewModel extends AndroidViewModel implements WebSocketMessa
         return strengthBValue;
     }
 
+    public SingleLiveEventUtils<Boolean> getSocketFlag() {
+        return socketFlag;
+    }
+
     public void updateStrengthA(int value) {
         if (dgLabV2Model.setStrengthAValue(value)) {
             strengthAValue.setValue(dgLabV2Model.getStrengthAValue());
+            writeIntensityToDevice(dgLabV2Model.getStrengthAValue(), dgLabV2Model.getStrengthBValue());
         }
     }
 
     public void updateStrengthB(int value) {
         if (dgLabV2Model.setStrengthBValue(value)) {
             strengthBValue.setValue(dgLabV2Model.getStrengthBValue());
+            writeIntensityToDevice(dgLabV2Model.getStrengthAValue(), dgLabV2Model.getStrengthBValue());
         }
-    }
-
-    public void togglePlayPauseA() {
-        isPlayingA = !isPlayingA;
-    }
-
-    public void togglePlayPauseB() {
-        isPlayingB = !isPlayingB;
-    }
-
-    public boolean isPlayingA() {
-        return isPlayingA;
-    }
-
-    public boolean isPlayingB() {
-        return isPlayingB;
     }
 
     public void connectWebSocket(String userId) {
@@ -183,8 +175,9 @@ public class DgLabV2ViewModel extends AndroidViewModel implements WebSocketMessa
             client.setMessageListener(this);
             client.connect();
             client.isConnected = true;
+            socketFlag.setValue(true);
         } else {
-            Log.e(TAG, "请先设置A通道或B通道的值");
+            socketFlag.setValue(false);
         }
     }
 
@@ -386,7 +379,6 @@ public class DgLabV2ViewModel extends AndroidViewModel implements WebSocketMessa
         if (service != null) {
             // 写入 A 通道
             BluetoothGattCharacteristic aChannelCharacteristic = service.getCharacteristic(UUID.fromString(DGLabConstants.DG_LAB_V2_WAVE_A_DIRECTION_CHARACTERISTIC));
-
             if (strengthAValue.getValue() > 0) {
                 if (aChannelCharacteristic != null) {
                     aChannelCharacteristic.setValue(aWave);
@@ -398,7 +390,6 @@ public class DgLabV2ViewModel extends AndroidViewModel implements WebSocketMessa
             // 延迟后写入 B 通道
             handler.postDelayed(() -> {
                 BluetoothGattCharacteristic bChannelCharacteristic = service.getCharacteristic(UUID.fromString(DGLabConstants.DG_LAB_V2_WAVE_B_DIRECTION_CHARACTERISTIC));
-
                 if (strengthBValue.getValue() > 0) {
                     if (bChannelCharacteristic != null) {
                         bChannelCharacteristic.setValue(bWave);
@@ -438,7 +429,11 @@ public class DgLabV2ViewModel extends AndroidViewModel implements WebSocketMessa
         }
     }
 
-
+    /**
+     * 向服务端发送波形数据
+     *
+     * @param jsonData
+     */
     public void sendWaveData(String jsonData) {
         String encryptedUserId = sharedPreferences.getString(LingJingConstants.USER_ID_KEY, null);
         if (StringUtils.isBlank(encryptedUserId)) {
@@ -519,5 +514,140 @@ public class DgLabV2ViewModel extends AndroidViewModel implements WebSocketMessa
                 deleteWaveResult.postValue(ErrorTypes.NETWORK_ERROR.getCode());
             }
         });
+    }
+
+
+    private MutableLiveData<Integer> pulseTimesValue = new MutableLiveData<>(0); // 默认为0
+    private MutableLiveData<Integer> pulseWidthValue = new MutableLiveData<>(0); // 默认为0
+    private MutableLiveData<Integer> pulseIntervalTimeValue = new MutableLiveData<>(0); // 默认为0
+
+
+    public MutableLiveData<Integer> getPulseTimesValue() {
+        return pulseTimesValue;
+    }
+
+    public MutableLiveData<Integer> getPulseWidthValue() {
+        return pulseWidthValue;
+    }
+
+    public MutableLiveData<Integer> getPulseIntervalTimeValue() {
+        return pulseIntervalTimeValue;
+    }
+
+    // 设置脉冲次数、脉冲宽度、脉冲间隔时间
+    public void setPulseTimesValue(int value) {
+        pulseTimesValue.setValue(value);
+    }
+
+    public void setPulseWidthValue(int value) {
+        pulseWidthValue.setValue(value);
+    }
+
+    public void setPulseIntervalTimeValue(int value) {
+        pulseIntervalTimeValue.setValue(value);
+    }
+
+    private final Handler handlerA = new Handler();
+
+    private final Handler handlerB = new Handler();
+
+    private Runnable waveformRunnableA;
+
+    private Runnable waveformRunnableB;
+    public void sendWaveDataA() {
+        String value = selectedWaveformText.getValue();
+        List<int[]> waveformData = getWaveformData(value);
+        if (waveformData.isEmpty()) {
+            waveformData = waveformDataMap.get(value);
+        }
+        Log.d(TAG, "Waveform data : " + waveformData);
+
+        BluetoothGattService service = bluetoothGatt.getService(UUID.fromString(DGLabConstants.DG_LAB_V2_PWM_AB_SERVICE));
+        if (service == null) {
+            return;
+        }
+        // 当前索引，用于记录从waveformData中取出的位置
+        final int[] currentIndex = {0};
+        List<int[]> finalWaveformData = waveformData;
+        // 定时器每100ms执行一次任务
+        waveformRunnableA = new Runnable() {
+            @Override
+            public void run() {
+                // 获取当前索引位置的数据
+                int[] data = finalWaveformData.get(currentIndex[0]);
+
+                // 处理数据
+                byte[] wave = StrengthAndWaveUtils.wave(data);
+                BluetoothGattCharacteristic aChannelCharacteristic = service.getCharacteristic(UUID.fromString(DGLabConstants.DG_LAB_V2_WAVE_A_DIRECTION_CHARACTERISTIC));
+
+                if (strengthAValue.getValue() > 0) {
+                    if (aChannelCharacteristic != null) {
+                        aChannelCharacteristic.setValue(wave);
+                        @SuppressLint("MissingPermission")
+                        boolean writeSuccessA = bluetoothGatt.writeCharacteristic(aChannelCharacteristic);
+                        Log.d(TAG, "写入A通道是否成功: " + writeSuccessA + ", Values: " + Arrays.toString(wave));
+                    }
+                }
+                // 更新索引，循环使用waveformData
+                currentIndex[0] = (currentIndex[0] + 1) % finalWaveformData.size();
+
+                // 100ms后继续执行
+                handlerA.postDelayed(this, 100);
+            }
+        };
+        // 启动定时任务
+        handlerA.post(waveformRunnableA);
+    }
+
+    public  void stopSendWaveDataA() {
+        handlerA.removeCallbacks(waveformRunnableA);
+    }
+
+    public void sendWaveDataB() {
+        String value = selectedWaveformText.getValue();
+        List<int[]> waveformData = getWaveformData(value);
+        if (waveformData.isEmpty()) {
+            waveformData = waveformDataMap.get(value);
+        }
+
+        BluetoothGattService service = bluetoothGatt.getService(UUID.fromString(DGLabConstants.DG_LAB_V2_PWM_AB_SERVICE));
+        if (service == null) {
+            return;
+        }
+        // 当前索引，用于记录从waveformData中取出的位置
+        final int[] currentIndex = {0};
+        List<int[]> finalWaveformData = waveformData;
+        // 定时器每100ms执行一次任务
+        waveformRunnableB = new Runnable() {
+            @Override
+            public void run() {
+                // 获取当前索引位置的数据
+                int[] data = finalWaveformData.get(currentIndex[0]);
+
+                // 处理数据
+                byte[] wave = StrengthAndWaveUtils.wave(data);
+                BluetoothGattCharacteristic bChannelCharacteristic = service.getCharacteristic(UUID.fromString(DGLabConstants.DG_LAB_V2_WAVE_B_DIRECTION_CHARACTERISTIC));
+                if (strengthBValue.getValue() > 0) {
+                    if (bChannelCharacteristic != null) {
+                        bChannelCharacteristic.setValue(wave);
+                        @SuppressLint("MissingPermission")
+                        boolean writeSuccessB = bluetoothGatt.writeCharacteristic(bChannelCharacteristic);
+                        Log.d(TAG, "写入B通道是否成功: " + writeSuccessB + ", Values: " + Arrays.toString(wave));
+                    }
+                }
+                // 更新索引，循环使用waveformData
+                currentIndex[0] = (currentIndex[0] + 1) % finalWaveformData.size();
+
+                // 100ms后继续执行
+                handlerB.postDelayed(this, 100);
+            }
+        };
+        // 启动定时任务
+        handlerB.post(waveformRunnableB);
+    }
+
+
+    public  void stopSendWaveDataB() {
+        handlerB.removeCallbacks(waveformRunnableB);
     }
 }

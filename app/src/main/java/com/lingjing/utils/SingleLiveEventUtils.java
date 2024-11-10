@@ -43,4 +43,8 @@ public class SingleLiveEventUtils<T> extends MutableLiveData<T> {
         setValue(null);
     }
 
+    public void clear() {
+        hasHandled.set(false);
+    }
+
 }

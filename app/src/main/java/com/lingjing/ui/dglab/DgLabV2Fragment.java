@@ -18,8 +18,12 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.lingjing.R;
+import com.lingjing.enums.ErrorTypes;
 import com.lingjing.ui.dglab.fragment.DgLabButtonsFragment;
+import com.lingjing.ui.dglab.fragment.DiyFragment;
 import com.lingjing.utils.ToastUtils;
+
+import org.apache.commons.lang3.StringUtils;
 
 import java.text.MessageFormat;
 import java.util.Objects;
@@ -34,7 +38,6 @@ import java.util.Objects;
  * @Version：1.0.0
  */
 public class DgLabV2Fragment extends Fragment implements DgLabButtonsFragment.ButtonsFragmentCallBack {
-    public static final String TAG = "DgLabV2Fragment";
 
     private DgLabV2ViewModel dgLabV2ViewModel;
 
@@ -44,13 +47,23 @@ public class DgLabV2Fragment extends Fragment implements DgLabButtonsFragment.Bu
 
     private TextView batteryText;
 
+    private String waveformName;
+
+    private boolean isAStart = false;
+
+    private boolean isBStart = false;
+
+    private DiyFragment diyFragment;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         dgLabV2ViewModel = new ViewModelProvider(requireActivity()).get(DgLabV2ViewModel.class);
         // 在这里开始连接并读取电量
+
         dgLabV2ViewModel.connectAndReadBattery(requireActivity().getApplicationContext());
+
+        diyFragment = DiyFragment.newInstance();
     }
 
     @Override
@@ -72,6 +85,16 @@ public class DgLabV2Fragment extends Fragment implements DgLabButtonsFragment.Bu
         dgLabV2ViewModel.getStrengthBValue().observe(getViewLifecycleOwner(), value -> strengthBValueText.setText(String.valueOf(value)));
 
         dgLabV2ViewModel.getBatteryLevel().observe(getViewLifecycleOwner(), batteryLevel -> batteryText.setText(MessageFormat.format("电量：{0}%", batteryLevel)));
+
+        dgLabV2ViewModel.getSelectedWaveformText().observe(getViewLifecycleOwner(), waveformText -> {
+            if (StringUtils.isNotBlank(waveformText)) {
+                waveformName = waveformText;
+            } else {
+                ToastUtils.showToast(requireContext(), ErrorTypes.WAVE_NOT_SELECTED.getMsg());
+            }
+        });
+
+
     }
 
     private void setupButtons(View view) {
@@ -85,7 +108,8 @@ public class DgLabV2Fragment extends Fragment implements DgLabButtonsFragment.Bu
         ImageButton startPauseButtonB = view.findViewById(R.id.startPauseButtonB);
         ImageButton strengthBPlus = view.findViewById(R.id.strengthBPlus);
         ImageButton strengthBMinus = view.findViewById(R.id.strengthBMinus);
-
+        updatePlayPauseButtonA(startPauseButtonA);
+        updatePlayPauseButtonB(startPauseButtonB);
         // 设置 A 通道按钮
         setupButtonA(startPauseButtonA, strengthAPlus, strengthAMinus);
 
@@ -94,11 +118,25 @@ public class DgLabV2Fragment extends Fragment implements DgLabButtonsFragment.Bu
     }
 
     private void setupButtonA(ImageButton startPauseButtonA, ImageButton strengthAPlus, ImageButton strengthAMinus) {
-        updatePlayPauseButtonA(startPauseButtonA);
-
         startPauseButtonA.setOnClickListener(v -> {
-            dgLabV2ViewModel.togglePlayPauseA();
-            updatePlayPauseButtonA(startPauseButtonA);
+            if (isAStart) {
+                // 如果当前是播放状态，点击暂停
+                isAStart = false;
+                updatePlayPauseButtonA(startPauseButtonA);
+                dgLabV2ViewModel.stopSendWaveDataA();
+               // 设置为暂停状态
+            } else {
+                // 如果当前是暂停状态，点击开始
+                if (StringUtils.isBlank(waveformName)){
+                    ToastUtils.showToast(getContext(), ErrorTypes.WAVE_NOT_SELECTED.getMsg());
+                }else {
+                    isAStart = true;
+                    updatePlayPauseButtonA(startPauseButtonA);
+                    dgLabV2ViewModel.sendWaveDataA();  // 发送波形数据
+                     // 设置为播放状态
+                }
+
+            }
         });
 
         strengthAPlus.setOnClickListener(v -> dgLabV2ViewModel.updateStrengthA(dgLabV2ViewModel.getStrengthAValue().getValue() + 1));
@@ -109,19 +147,33 @@ public class DgLabV2Fragment extends Fragment implements DgLabButtonsFragment.Bu
     }
 
     private void updatePlayPauseButtonA(ImageButton button) {
-        if (dgLabV2ViewModel.isPlayingA()) {
-            button.setImageResource(R.mipmap.ic_start);
-        } else {
+        if (isAStart) {
             button.setImageResource(R.mipmap.ic_pause);
+        } else {
+            button.setImageResource(R.mipmap.ic_start);
         }
     }
 
     private void setupButtonB(ImageButton startPauseButtonB, ImageButton strengthBPlus, ImageButton strengthBMinus) {
-        updatePlayPauseButtonB(startPauseButtonB);
-
         startPauseButtonB.setOnClickListener(v -> {
-            dgLabV2ViewModel.togglePlayPauseB();
-            updatePlayPauseButtonB(startPauseButtonB);
+            if (isBStart) {
+                // 如果当前是播放状态，点击暂停
+                isBStart = false;
+                updatePlayPauseButtonB(startPauseButtonB);
+                dgLabV2ViewModel.stopSendWaveDataB();
+                 // 设置为暂停状态
+            } else {
+                // 如果当前是暂停状态，点击开始
+                if (StringUtils.isBlank(waveformName)){
+                    ToastUtils.showToast(getContext(), ErrorTypes.WAVE_NOT_SELECTED.getMsg());
+                }else {
+                    isBStart = true;  // 设置为播放状态
+                    updatePlayPauseButtonB(startPauseButtonB);
+                    dgLabV2ViewModel.sendWaveDataB();  // 发送波形数据
+
+                }
+
+            }
         });
 
         strengthBPlus.setOnClickListener(v -> dgLabV2ViewModel.updateStrengthB(dgLabV2ViewModel.getStrengthBValue().getValue() + 1));
@@ -132,10 +184,10 @@ public class DgLabV2Fragment extends Fragment implements DgLabButtonsFragment.Bu
     }
 
     private void updatePlayPauseButtonB(ImageButton button) {
-        if (dgLabV2ViewModel.isPlayingB()) {
-            button.setImageResource(R.mipmap.ic_start);
-        } else {
+        if (isBStart) {
             button.setImageResource(R.mipmap.ic_pause);
+        } else {
+            button.setImageResource(R.mipmap.ic_start);
         }
     }
 

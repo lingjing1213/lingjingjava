@@ -21,45 +21,40 @@ public enum ErrorTypes {
     NO_USER(10003, "没有该用户"),
 
     LOGIN_REQUIRED(10004, "需要登录"),
-    //生成密钥对失败
+
+    CONNECT_SUCCESS(10005, "连接成功"),
+
+    CONNECT_FAIL(10006, "连接失败"),
+
     GENERATE_KEY_PAIR_FAIL(20000, "生成密钥对失败"),
 
-    //获取公钥失败
     GET_PUBLIC_KEY_FAIL(20001, "获取公钥失败"),
 
-    //获取私钥失败
     GET_PRIVATE_KEY_FAIL(20002, "获取私钥失败"),
 
-    //私钥签名失败
     PRIVATE_KEY_SIGN_FAIL(20003, "私钥签名失败"),
 
-    //公钥验签失败
     PUBLIC_KEY_VERIFY_FAIL(20004, "公钥验签失败"),
 
-    //加密失败
     ENCRYPT_FAIL(20005, "加密失败"),
 
-    //解密失败
     DECRYPT_FAIL(20006, "解密失败"),
 
-    //删除密钥对失败
     DELETE_KEY_PAIR_FAIL(20007, "删除密钥对失败"),
 
-    //json 解析失败
     JSON_PARSE_FAIL(30000, "json 解析失败"),
 
-    //新增波形成功
     ADD_WAVE_SUCCESS(40000, "新增波形成功"),
-    //新增波形失败
+
     ADD_WAVE_FAIL(40001, "新增波形失败"),
-    //删除波形成功
+
     DELETE_WAVE_SUCCESS(40002, "删除波形成功"),
-    //删除波形失败
+
     DELETE_WAVE_FAIL(40003, "删除波形失败"),
-    //操作成功
-    OPERATION_SUCCESS(40000, "操作成功"),
-    //操作失败
-    OPERATION_FAIL(40001, "操作失败"),
+
+    STRENGTH_NOT_SET(40004, "A或B通道的强度未设置"),
+
+    WAVE_NOT_SELECTED(40005, "请先选择波形"),
 
     NETWORK_ERROR(99998, "网络连接失败"),
 
